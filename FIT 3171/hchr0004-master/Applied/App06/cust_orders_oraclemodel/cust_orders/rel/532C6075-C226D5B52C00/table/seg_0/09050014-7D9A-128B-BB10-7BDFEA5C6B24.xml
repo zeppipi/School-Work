@@ -1,0 +1,137 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+<Table class="oracle.dbtools.crest.model.design.relational.Table" directorySegmentName="seg_0" id="09050014-7D9A-128B-BB10-7BDFEA5C6B24" name="ORDERLINE">
+<createdBy>zael pc</createdBy>
+<createdTime>2022-04-07 05:30:23 UTC</createdTime>
+<generatorID>78AB47E9-538A-DAC9-954F-0184A8246EB9</generatorID>
+<ownerDesignName>cust_orders</ownerDesignName>
+<allowColumnReorder>false</allowColumnReorder>
+<existDependencyGenerateInDDl>true</existDependencyGenerateInDDl>
+<parsed>true</parsed>
+<columns itemClass="oracle.dbtools.crest.model.design.relational.Column">
+<Column name="ol_qtyordered" id="4E7799C5-1141-2393-14C6-09FF50FD6E20">
+<createdBy>zael pc</createdBy>
+<createdTime>2022-04-07 05:30:23 UTC</createdTime>
+<commentInRDBMS><![CDATA[orderline quantity ordered]]></commentInRDBMS>
+<generatorID>9A22BAFB-0A91-D952-BD46-136A32063D6F</generatorID>
+<ownerDesignName>cust_orders</ownerDesignName>
+<useDomainConstraints>false</useDomainConstraints>
+<use>1</use>
+<logicalDatatype>LOGDT019</logicalDatatype>
+<dataTypePrecision>7</dataTypePrecision>
+<ownDataTypeParameters>,7,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+</Column>
+<Column name="ol_lineprice" id="63EFF13D-72C1-7E5A-CB89-1574ED3DA899">
+<createdBy>zael pc</createdBy>
+<createdTime>2022-04-07 05:30:23 UTC</createdTime>
+<commentInRDBMS><![CDATA[this current orderline's price
+]]></commentInRDBMS>
+<generatorID>C68A1452-6696-E879-BA2A-566E92A5E013</generatorID>
+<ownerDesignName>cust_orders</ownerDesignName>
+<useDomainConstraints>false</useDomainConstraints>
+<use>1</use>
+<logicalDatatype>LOGDT019</logicalDatatype>
+<dataTypePrecision>7</dataTypePrecision>
+<dataTypeScale>2</dataTypeScale>
+<ownDataTypeParameters>,7,2</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+</Column>
+<Column name="order_no" id="0EDFEE20-9E70-FE74-3607-AF797599F2C9">
+<createdBy>zael pc</createdBy>
+<createdTime>2022-04-07 05:30:23 UTC</createdTime>
+<commentInRDBMS><![CDATA[order number
+]]></commentInRDBMS>
+<generatorID>E602C3B7-6911-A1C0-77EB-821B18A3F652</generatorID>
+<ownerDesignName>cust_orders</ownerDesignName>
+<useDomainConstraints>false</useDomainConstraints>
+<use>1</use>
+<logicalDatatype>LOGDT019</logicalDatatype>
+<dataTypePrecision>7</dataTypePrecision>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<previousColumn>false</previousColumn>
+<autoIncrementCycle>false</autoIncrementCycle>
+<associations>
+<colAssociation fkAssociation="32428DA4-3041-3495-D3AE-8B51073D8EFB" referredColumn="E0A6C134-4C4C-7CEA-8312-BA1C5E767F92"/>
+</associations>
+</Column>
+<Column name="prod_no" id="FF1054B7-C8F5-6E72-8692-A7880E6F1E74">
+<createdBy>zael pc</createdBy>
+<createdTime>2022-04-07 05:30:23 UTC</createdTime>
+<commentInRDBMS><![CDATA[product number
+]]></commentInRDBMS>
+<generatorID>0BDA0454-BB33-52BA-8B88-2968ABAF9E3C</generatorID>
+<ownerDesignName>cust_orders</ownerDesignName>
+<useDomainConstraints>false</useDomainConstraints>
+<use>1</use>
+<logicalDatatype>LOGDT019</logicalDatatype>
+<dataTypePrecision>7</dataTypePrecision>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<previousColumn>false</previousColumn>
+<autoIncrementCycle>false</autoIncrementCycle>
+<associations>
+<colAssociation fkAssociation="B64E1851-2152-7483-2FB3-A54BCC37394B" referredColumn="4BCA13F7-1388-C8E7-DB82-28E55768CD61"/>
+</associations>
+</Column>
+<Column name="orderline_id" id="71046CBF-E3FA-5E81-2B2E-1A7562BA578E">
+<createdBy>zael pc</createdBy>
+<createdTime>2022-04-07 05:30:23 UTC</createdTime>
+<commentInRDBMS><![CDATA[surrogate key]]></commentInRDBMS>
+<generatorID>5F1551CB-FA8D-932C-1747-A777863B5306</generatorID>
+<ownerDesignName>cust_orders</ownerDesignName>
+<useDomainConstraints>false</useDomainConstraints>
+<use>1</use>
+<logicalDatatype>LOGDT019</logicalDatatype>
+<dataTypePrecision>7</dataTypePrecision>
+<ownDataTypeParameters>,7,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+</Column>
+</columns>
+<indexes itemClass="oracle.dbtools.crest.model.design.relational.Index">
+<ind_PK_UK id="C10C4268-93E1-C31C-DE13-9407CA033E51" name="ORDERLINE_PK">
+<createdBy>zael pc</createdBy>
+<createdTime>2022-04-07 05:30:23 UTC</createdTime>
+<generatorID>663E2842-346A-8576-7D05-C348C66BEB5C</generatorID>
+<ownerDesignName>cust_orders</ownerDesignName>
+<pk>true</pk>
+<indexState>Primary Constraint</indexState>
+<isSurrogateKey>false</isSurrogateKey>
+<indexColumnUsage>
+<colUsage columnID="71046CBF-E3FA-5E81-2B2E-1A7562BA578E"/>
+</indexColumnUsage>
+</ind_PK_UK>
+<ind_PK_UK id="6C39BD7A-731A-B2AA-FF6D-E5D66817CCF8" name="ORDERLINE_NK">
+<createdBy>zael pc</createdBy>
+<createdTime>2022-04-07 05:30:23 UTC</createdTime>
+<generatorID>D8A2477C-305D-E5D2-835B-5CF0977E109C</generatorID>
+<ownerDesignName>cust_orders</ownerDesignName>
+<indexState>Unique Constraint</indexState>
+<isSurrogateKey>false</isSurrogateKey>
+<indexColumnUsage>
+<colUsage columnID="0EDFEE20-9E70-FE74-3607-AF797599F2C9"/>
+<colUsage columnID="FF1054B7-C8F5-6E72-8692-A7880E6F1E74"/>
+</indexColumnUsage>
+</ind_PK_UK>
+<ind_PK_UK id="E8452583-5B65-D16C-46C8-3B351CA232E4" name="ORDER_ORDERLINE">
+<createdBy>zael pc</createdBy>
+<createdTime>2022-04-07 05:30:23 UTC</createdTime>
+<generatorID>E407C0BD-4978-687F-178A-A5A23302E9D1</generatorID>
+<ownerDesignName>cust_orders</ownerDesignName>
+<indexState>Foreign Key</indexState>
+<isSurrogateKey>false</isSurrogateKey>
+<indexColumnUsage>
+<colUsage columnID="0EDFEE20-9E70-FE74-3607-AF797599F2C9"/>
+</indexColumnUsage>
+</ind_PK_UK>
+<ind_PK_UK id="AC22BBD5-0C03-BC6B-CEE1-68A5C662C90B" name="PRODUCT_ORDERLINE">
+<createdBy>zael pc</createdBy>
+<createdTime>2022-04-07 05:30:23 UTC</createdTime>
+<generatorID>BF337D13-E2B2-B155-7698-8C20D6356A3C</generatorID>
+<ownerDesignName>cust_orders</ownerDesignName>
+<indexState>Foreign Key</indexState>
+<isSurrogateKey>false</isSurrogateKey>
+<indexColumnUsage>
+<colUsage columnID="FF1054B7-C8F5-6E72-8692-A7880E6F1E74"/>
+</indexColumnUsage>
+</ind_PK_UK>
+</indexes>
+</Table>

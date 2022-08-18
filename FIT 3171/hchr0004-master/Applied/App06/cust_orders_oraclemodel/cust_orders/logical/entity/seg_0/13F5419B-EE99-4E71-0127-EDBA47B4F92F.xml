@@ -1,0 +1,78 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+<Entity class="oracle.dbtools.crest.model.design.logical.Entity" directorySegmentName="seg_0" id="13F5419B-EE99-4E71-0127-EDBA47B4F92F" name="ORDERS">
+<createdBy>zael pc</createdBy>
+<createdTime>2022-04-07 04:34:00 UTC</createdTime>
+<ownerDesignName>cust_orders</ownerDesignName>
+<engineerTo>
+<item key="532C6075-6AEA-9929-2D74-C226D5B52C00" value="true"/>
+</engineerTo>
+<adequatelyNormalized>NO</adequatelyNormalized>
+<expectedVolumes>0</expectedVolumes>
+<fwdEngineeringStrategyName>Single Table</fwdEngineeringStrategyName>
+<growthPercent>0</growthPercent>
+<growthType>Year</growthType>
+<maxVolumes>9999999</maxVolumes>
+<minVolumes>0</minVolumes>
+<normalForm>Third</normalForm>
+<attributes itemClass="oracle.dbtools.crest.model.design.logical.Attribute">
+<Attribute name="order_no" id="97CAE521-F51B-91FC-6E58-07B565B531E3">
+<createdBy>zael pc</createdBy>
+<createdTime>2022-04-07 04:34:09 UTC</createdTime>
+<commentInRDBMS><![CDATA[order number
+]]></commentInRDBMS>
+<ownerDesignName>cust_orders</ownerDesignName>
+<engineerTo>
+<item key="532C6075-6AEA-9929-2D74-C226D5B52C00" value="true"/>
+</engineerTo>
+<useDomainConstraints>false</useDomainConstraints>
+<use>1</use>
+<logicalDatatype>LOGDT019</logicalDatatype>
+<dataTypePrecision>7</dataTypePrecision>
+<ownDataTypeParameters>,7,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="order_date" id="5F99752D-9B33-7232-783D-F120CF3BA522">
+<createdBy>zael pc</createdBy>
+<createdTime>2022-04-07 04:34:09 UTC</createdTime>
+<commentInRDBMS><![CDATA[order date]]></commentInRDBMS>
+<ownerDesignName>cust_orders</ownerDesignName>
+<engineerTo>
+<item key="532C6075-6AEA-9929-2D74-C226D5B52C00" value="true"/>
+</engineerTo>
+<useDomainConstraints>false</useDomainConstraints>
+<use>1</use>
+<logicalDatatype>LOGDT007</logicalDatatype>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="cust_no" id="FD1AB296-A83E-BEFA-AD00-0FDF5EDEA947">
+<createdBy>zael pc</createdBy>
+<createdTime>2022-04-07 04:53:49 UTC</createdTime>
+<commentInRDBMS><![CDATA[customer number
+]]></commentInRDBMS>
+<generatorID>D8A2B498-12AB-12E4-A700-4D5578E85C7F</generatorID>
+<ownerDesignName>cust_orders</ownerDesignName>
+<engineerTo>
+<item key="532C6075-6AEA-9929-2D74-C226D5B52C00" value="true"/>
+</engineerTo>
+<referedAttribute>6AD2754E-C6AC-77DE-09C1-BEAC805D3A0C</referedAttribute>
+<useDomainConstraints>false</useDomainConstraints>
+<use>1</use>
+<logicalDatatype>LOGDT019</logicalDatatype>
+<dataTypePrecision>7</dataTypePrecision>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+</attributes>
+<identifiers itemClass="oracle.dbtools.crest.model.design.logical.CandidateKey">
+<identifier id="4E68BB5B-6A71-8D12-7429-0867A79ABDD5" name="ORDERS PK">
+<createdBy>zael pc</createdBy>
+<createdTime>2022-04-07 04:35:10 UTC</createdTime>
+<ownerDesignName>cust_orders</ownerDesignName>
+<engineerTo>
+<item key="532C6075-6AEA-9929-2D74-C226D5B52C00" value="true"/>
+</engineerTo>
+<pk>true</pk>
+<usedAttributes>
+<attributeRef>97CAE521-F51B-91FC-6E58-07B565B531E3</attributeRef>
+</usedAttributes>
+</identifier>
+</identifiers>
+</Entity>

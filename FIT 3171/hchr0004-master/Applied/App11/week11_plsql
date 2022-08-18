@@ -1,0 +1,193 @@
+--Show dbms output in the script output
+set serveroutput on;
+
+--Check Student name trigger
+drop trigger check_student_name;
+
+create trigger check_student_name
+    before insert on student
+    for each row
+    begin
+        if(:new.stu_lname is null and :new.stu_fname is null) then
+            raise_application_error(-20000, 'A student must have both a last name and first name');
+        else
+            dbms_output.put_line('Record is inserted');
+        end if;
+    end;
+/
+
+--Test harness
+--Test case 1
+--Before
+select count(*) from student;
+--Executing trigger
+--Lastname null first name not null
+--Trigger will not be triggered
+insert into student
+    values(
+    1111126, null, 'Fred', to_date('01-Feb-91', 'DD-MON-YY'), 46
+    );
+--After
+select count(*) from student;
+
+--Test case 2
+--Before
+select count(*) from student;
+--Executing trigger
+--Lastname not null first name null
+--Trigger will not be triggered
+insert into student
+    values(
+    1111127, 'Fred', null, to_date('01-Feb-91', 'DD-MON-YY'), 46
+    );
+--After
+select count(*) from student;
+
+--Test case 3
+--Before
+select count(*) from student;
+--Executing trigger
+--Lastname not null first name not null
+--Trigger will not be triggered
+insert into student
+    values(
+    1111128, 'Fred', 'Fred', to_date('01-Feb-91', 'DD-MON-YY'), 46
+    );
+--After
+select count(*) from student;
+
+--Test case 4
+--Before
+select count(*) from student;
+--Executing trigger
+--Lastname null first name null
+--Trigger will be triggered
+insert into student
+    values(
+    1111129, null, null, to_date('01-Feb-91', 'DD-MON-YY'), 46
+    );
+--After
+select count(*) from student;
+
+rollback;
+
+--The unit update cascade trigger
+drop trigger unit_upd_cascade;
+
+create trigger unit_upd_cascade 
+    after update on unit
+    for each row
+    begin
+        update enrolment set unit_code = :new.unit_code
+            where unit_code = :old.unit_code;
+    end;
+/
+--Test Harness
+--Test case 1
+--Before, this unit code exists
+select count(*) from unit where unit_code = 'FIT5057';
+select count(*) from enrolment where unit_code = 'FIT5057';
+--Executing trigger
+--Update a unit code in the unit table
+--Trigger will be trigged
+update unit
+    set unit_code = 'FIT5060'
+    where unit_code = 'FIT5057';
+--After, this unit code doesn't exist anymore as they all have been replaced
+select count(*) from unit where unit_code = 'FIT5057';
+select count(*) from enrolment where unit_code = 'FIT5057';
+
+rollback;
+
+--The total student number integrity trigger
+drop trigger change_enrolment;
+
+create trigger change_enrolment
+    after update or insert or delete on enrollment
+    for each row
+    begin
+        if updating then
+            update unit set unit_no_student = unit_no_student - 1
+                where unit_code = :old.unit_code;
+            update unit set unit_no_student = unit_no_student + 1
+                where unit_code = :new.unit_code;
+        elsif inserting then
+            update unit set unit_no_student = unit_no_student + 1
+                where unit_code = :new.unit_code;
+        elsif deleting then
+            update unit set unit_no_student = unit_no_student - 1
+                where unit_code = :old.unit_code;
+        end if;
+    end;
+/
+
+--Making a procedure
+drop procedure prc_new_enrolment;
+
+create procedure prc_new_enrolment
+    (
+    in_stu_nbr in number,
+    in_unit_code in char,
+    in_enrol_year in number,
+    in_enrol_sem in char,
+    out_message out varchar2
+    ) as student_found number;
+         unit_found number;
+         enrolment_found number;
+    
+    begin
+        select count(*) into student_found from student 
+            where stu_nbr = in_stu_nbr;
+        
+        select count(*) into unit_found from unit 
+            where unit_code = in_unit_code;
+        
+        select count(*) into enrolment_found from enrolment
+            where unit_code = in_unit_code
+            and stu_nbr = in_stu_nbr
+            and enrol_year = in_enrol_year
+            and enrol_semester = in_enrol_sem;
+        
+        if(student_found = 0) then
+            out_message := 'Incorrect student number';
+        elsif(unit_found = 0) then
+            out_message := 'Incorrect unit code';
+        elsif(enrolment_found <> 0) then
+            out_message := 'Enrolment existed';
+        else
+            insert into enrolment
+                values(in_stu_nbr, in_unit_code, in_enrol_year, in_enrol_sem, null, null);
+        end if;
+    end;
+/
+
+--Test harness
+--Test case 1
+--Before
+select count(*) from enrolment;
+--Executing procedure
+--Insert an invalid student number
+--Procedure should output a fail message
+declare output varchar2(50);
+begin 
+    prc_new_enrolment('897324', 'FIT9131', 2020, '1', output);
+    dbms_output.put_line(output);
+end;
+/
+--After
+select count(*) from enrolment;
+
+--Test case 2
+--Before
+select count(*) from enrolment;
+--Executing procedure
+--Insert an invalid student number
+--Procedure should output a fail message
+declare output varchar2(50);
+begin 
+    prc_new_enrolment('11111121', 'notaunit', 2020, '1', output);
+    dbms_output.put_line(output);
+end;
+/
+--After
+select count(*) from enrolment;

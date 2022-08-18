@@ -1,0 +1,95 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+<Table class="oracle.dbtools.crest.model.design.relational.Table" directorySegmentName="seg_0" id="A1E07766-2515-2BA2-6D78-46584C8BCC96" name="PRODUCT">
+<createdBy>zael pc</createdBy>
+<createdTime>2022-04-07 05:30:23 UTC</createdTime>
+<generatorID>ECDE1E20-6EE4-E433-262F-7CCEC37D7609</generatorID>
+<ownerDesignName>cust_orders</ownerDesignName>
+<allowColumnReorder>false</allowColumnReorder>
+<existDependencyGenerateInDDl>true</existDependencyGenerateInDDl>
+<parsed>true</parsed>
+<columns itemClass="oracle.dbtools.crest.model.design.relational.Column">
+<Column name="prod_no" id="4BCA13F7-1388-C8E7-DB82-28E55768CD61">
+<createdBy>zael pc</createdBy>
+<createdTime>2022-04-07 05:30:23 UTC</createdTime>
+<commentInRDBMS><![CDATA[product number
+]]></commentInRDBMS>
+<generatorID>4DC98F4D-2D01-176F-ECE3-E1646EEDD6A6</generatorID>
+<ownerDesignName>cust_orders</ownerDesignName>
+<useDomainConstraints>false</useDomainConstraints>
+<use>1</use>
+<logicalDatatype>LOGDT019</logicalDatatype>
+<dataTypePrecision>7</dataTypePrecision>
+<ownDataTypeParameters>,7,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+</Column>
+<Column name="prod_desc" id="CB2FEB40-49DA-E4CC-4D9B-84B812CC3D02">
+<createdBy>zael pc</createdBy>
+<createdTime>2022-04-07 05:30:23 UTC</createdTime>
+<commentInRDBMS><![CDATA[product description]]></commentInRDBMS>
+<generatorID>CD16288A-4EC7-F4EF-9983-09EB9A1F9884</generatorID>
+<ownerDesignName>cust_orders</ownerDesignName>
+<useDomainConstraints>false</useDomainConstraints>
+<use>1</use>
+<logicalDatatype>LOGDT024</logicalDatatype>
+<dataTypeSize>50</dataTypeSize>
+<ownDataTypeParameters>50,,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+</Column>
+<Column name="prod_unitprice" id="768F81A5-D022-77E7-68BF-D74D5FB6E5D2">
+<createdBy>zael pc</createdBy>
+<createdTime>2022-04-07 05:30:23 UTC</createdTime>
+<commentInRDBMS><![CDATA[the product's unit price]]></commentInRDBMS>
+<generatorID>91C92610-AE57-91C9-A1E6-974D161609A6</generatorID>
+<ownerDesignName>cust_orders</ownerDesignName>
+<useDomainConstraints>false</useDomainConstraints>
+<use>1</use>
+<logicalDatatype>LOGDT019</logicalDatatype>
+<dataTypePrecision>7</dataTypePrecision>
+<dataTypeScale>2</dataTypeScale>
+<ownDataTypeParameters>,7,2</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+</Column>
+<Column name="pcat_id" id="2FA8F15C-34EA-F7C6-76E1-1D003E947635">
+<createdBy>zael pc</createdBy>
+<createdTime>2022-04-07 05:30:23 UTC</createdTime>
+<commentInRDBMS><![CDATA[product category id]]></commentInRDBMS>
+<generatorID>2A36C000-D1F1-A0A9-2508-2BB341CABE03</generatorID>
+<ownerDesignName>cust_orders</ownerDesignName>
+<useDomainConstraints>false</useDomainConstraints>
+<use>1</use>
+<logicalDatatype>LOGDT019</logicalDatatype>
+<dataTypePrecision>7</dataTypePrecision>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<previousColumn>false</previousColumn>
+<autoIncrementCycle>false</autoIncrementCycle>
+<associations>
+<colAssociation fkAssociation="8AA39209-22B3-26E8-6A8A-66F90DF93B6F" referredColumn="12BA3367-81E0-4614-1400-63C4BC61EC32"/>
+</associations>
+</Column>
+</columns>
+<indexes itemClass="oracle.dbtools.crest.model.design.relational.Index">
+<ind_PK_UK id="3BA50C72-764F-E06E-B862-6C4FA221F5F8" name="PRODUCT_PK">
+<createdBy>zael pc</createdBy>
+<createdTime>2022-04-07 05:30:23 UTC</createdTime>
+<generatorID>D2225678-C087-DAB2-488D-08B85E5B3D12</generatorID>
+<ownerDesignName>cust_orders</ownerDesignName>
+<pk>true</pk>
+<indexState>Primary Constraint</indexState>
+<isSurrogateKey>false</isSurrogateKey>
+<indexColumnUsage>
+<colUsage columnID="4BCA13F7-1388-C8E7-DB82-28E55768CD61"/>
+</indexColumnUsage>
+</ind_PK_UK>
+<ind_PK_UK id="AA82017A-56E9-5FEE-254E-2F51C59E384E" name="PRODUCT_CATEGORY_PRODUCT">
+<createdBy>zael pc</createdBy>
+<createdTime>2022-04-07 05:30:23 UTC</createdTime>
+<generatorID>CE1390AF-2250-5C92-7999-3643B480B229</generatorID>
+<ownerDesignName>cust_orders</ownerDesignName>
+<indexState>Foreign Key</indexState>
+<isSurrogateKey>false</isSurrogateKey>
+<indexColumnUsage>
+<colUsage columnID="2FA8F15C-34EA-F7C6-76E1-1D003E947635"/>
+</indexColumnUsage>
+</ind_PK_UK>
+</indexes>
+</Table>
