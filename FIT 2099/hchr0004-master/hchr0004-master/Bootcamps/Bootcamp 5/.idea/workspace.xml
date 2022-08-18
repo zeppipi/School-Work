@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="01f5789d-44b7-4a52-a1a3-b6605d1145e6" name="Changes" comment="Forgot to upload the Bootcamp 5 UML">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/../.." />
+  </component>
+  <component name="ProjectId" id="1wG3gesp10a0Xy1tV76XKQOtFIv" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/AutoShowroom" />
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="01f5789d-44b7-4a52-a1a3-b6605d1145e6" name="Changes" comment="" />
+      <created>1628071212705</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1628071212705</updated>
+    </task>
+    <task id="LOCAL-00001" summary="Restructured the Repository">
+      <created>1628673776638</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1628673776638</updated>
+    </task>
+    <task id="LOCAL-00002" summary="Current Bootcamp 3 Progress: finished task 5">
+      <created>1628701188429</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1628701188429</updated>
+    </task>
+    <task id="LOCAL-00003" summary="Current Bootcamp 3 Progress: finished task 5">
+      <created>1628701429860</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1628701429860</updated>
+    </task>
+    <task id="LOCAL-00004" summary="Current Bootcamp 3 Progress: Done! But may need to redo task 7">
+      <created>1628833217362</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1628833217362</updated>
+    </task>
+    <task id="LOCAL-00005" summary="Current Bootcamp 3 Progress: Done! may need to tweak task 7">
+      <created>1628834480398</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1628834480398</updated>
+    </task>
+    <task id="LOCAL-00006" summary="Bootcamp 4 begins!">
+      <created>1629278056793</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1629278056793</updated>
+    </task>
+    <task id="LOCAL-00007" summary="Almost done, but there's a bug: When displaying the vehicles, the vehicle's hashmap of buyers isn't showing up">
+      <created>1629460692471</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1629460692471</updated>
+    </task>
+    <task id="LOCAL-00008" summary="Bootcamp 4 DONE! Polishing needed">
+      <created>1629469734461</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1629469734461</updated>
+    </task>
+    <task id="LOCAL-00009" summary="Bootcamp 4 DONE! Polishing needed">
+      <created>1629469908035</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1629469908035</updated>
+    </task>
+    <task id="LOCAL-00010" summary="Current Progress: Bootcamp 5 Task 1F">
+      <created>1629915098700</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1629915098700</updated>
+    </task>
+    <task id="LOCAL-00011" summary="Bootcamp 5 Finished! Javadoc may have several grammar mistakes and typos">
+      <created>1629992594620</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1629992594620</updated>
+    </task>
+    <task id="LOCAL-00012" summary="Forgot to upload the Bootcamp 5 UML">
+      <created>1630071658274</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1630071658274</updated>
+    </task>
+    <option name="localTasksCounter" value="13" />
+    <servers />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+    <option name="oldMeFiltersMigrated" value="true" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Restructured the Repository" />
+    <MESSAGE value="Current Bootcamp 3 Progress: finished task 5" />
+    <MESSAGE value="Current Bootcamp 3 Progress: Done! But may need to redo task 7" />
+    <MESSAGE value="Current Bootcamp 3 Progress: Done! may need to tweak task 7" />
+    <MESSAGE value="Bootcamp 4 begins!" />
+    <MESSAGE value="Almost done, but there's a bug: When displaying the vehicles, the vehicle's hashmap of buyers isn't showing up" />
+    <MESSAGE value="Bootcamp 4 DONE! Polishing needed" />
+    <MESSAGE value="Current Progress: Bootcamp 5 Task 1F" />
+    <MESSAGE value="Bootcamp 5 Finished! Javadoc may have several grammar mistakes and typos" />
+    <MESSAGE value="Forgot to upload the Bootcamp 5 UML" />
+    <option name="LAST_COMMIT_MESSAGE" value="Forgot to upload the Bootcamp 5 UML" />
+  </component>
+</project>

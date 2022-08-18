@@ -1,0 +1,3 @@
+Catching Exceptions has the pros of not needing any refactoring to existing code, it mostly consists of adding a few more lines of code and those lines of code even include copy pasted lines of existing code, it does have the con of being pausibly vulnerable, with exceptions only (preferably) testing out a few lines of code, it is very possible that some other error that wasn't considered happen elsewhere.
+
+Static Factory has the pros of making the code very very rigid, forcing a class to only have one way of getting its instance, makes sures that if an error happens, it happens on where we are checking, but it has the con of needing to refactor a chunk of code in order for this system to even work.

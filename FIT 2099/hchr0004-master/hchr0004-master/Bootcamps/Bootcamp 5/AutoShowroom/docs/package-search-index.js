@@ -1,0 +1,1 @@
+packageSearchIndex = [{"l":"All Packages","u":"allpackages-index.html"},{"l":"edu.monash.fit2099"},{"l":"edu.monash.fit2099.bids"},{"l":"edu.monash.fit2099.buyers"},{"l":"edu.monash.fit2099.exceptions"},{"l":"edu.monash.fit2099.vehicles"}];updateSearchResults();

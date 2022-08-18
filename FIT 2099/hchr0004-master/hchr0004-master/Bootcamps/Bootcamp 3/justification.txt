@@ -1,0 +1,5 @@
+Making the buyer and bidder ID in integers has the advantage of them being pretty easy to make and also very easy to track, but integers has the problem of not having that much space for unique IDs, and at a glance, they all don't really look unique.
+
+Making the buyer and bidder ID in strings has the advantage of them having way more space for unique IDs and also makes sure that individual buyers and bidders has a very unique ID that are distinct from the next person. They do have the disadvantage of being a little more complicated to implement and also a little harder to track.
+
+I chose to make the ID's in strings, because I personally want to make sure that all bidders and buyers has distinct ID's for this assignment. The implementation isn't that much more complex than a random integers and tracking isn't really that needed for this assignment, so the ID's will be in strings.
