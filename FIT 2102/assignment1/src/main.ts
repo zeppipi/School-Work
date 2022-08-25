@@ -23,7 +23,7 @@ function main() {
   const svg = document.querySelector("#svgCanvas") as SVGElement & HTMLElement;
 
   // Store the possible game actions
-  class Move {constructor(public readonly x_move: number, y_move: number) {} }  // A move state
+  class Move {constructor(public readonly x_move: number, readonly y_move: number) {} }  // A move state
   class Tick {constructor(public readonly time: number) {} }                    // A clock
   
   // Store constants
@@ -32,26 +32,20 @@ function main() {
     CanvasSize: 600,                // The canvas you are working with is 600x600
     playerSpawnPoint: [300, 550],   // Where the player will spawn
     playerMoveDis: 20,              // Store the distance the player should move
-    playerFillColor: "green",       // Store the player's fill color
-    playerStrokeColor: "green",     // Store the player's stroke color
-    playerStrokeWidth: 1            // Store the player's stroke width
   } as const;
   
   /**
    * All possible info of any circle objects
    * Code derived from the Astreoid FRP
    */
-  type Circle = Readonly<{pos_x:number, pos_y:number , radius:number}>
+  type Circle = Readonly<{pos_x:number, pos_y:number}>
 
   /**
    * All possible info of any objects
    * Code derived from the Astreoid FRP
    */
   interface IBody extends Circle{
-    //For cosmetic attributes
-    fillColor: String,
-    strokeColor: String,
-    strokeWidth: number
+    ID: string;
   }
 
   // Body object, made from its interface
@@ -63,26 +57,12 @@ function main() {
   function createPlayer(): Body
   {
     return{
+      ID: "frog",
       pos_x: Constants.playerSpawnPoint[0],
       pos_y: Constants.playerSpawnPoint[1],
-      radius: Constants.playerMoveDis,
-      fillColor: Constants.playerFillColor,
-      strokeColor: Constants.playerStrokeColor,
-      strokeWidth: Constants.playerStrokeWidth
     };
   }
   
-  // Adding a circle element that represents the player
-  const player = document.createElementNS(svg.namespaceURI, "circle");
-  player.setAttribute("r", String(Constants.playerMoveDis));  //They should move by the length of themself
-  player.setAttribute("cx", String(Constants.playerSpawnPoint[0]));
-  player.setAttribute("cy", String(Constants.playerSpawnPoint[1]));
-  player.setAttribute(
-    "style",
-    "fill: green; stroke: green; stroke-width: 1px;"
-  );
-  svg.appendChild(player);
-
   /**
    * The game state type, taken from the Astreoid FRP
    */
@@ -110,8 +90,8 @@ function main() {
       {...curState,
         frog: 
         { ...curState.frog,
-          pos_x: curState.frog.pos_x + Constants.playerMoveDis,
-          pos_y: curState.frog.pos_y + Constants.playerMoveDis
+          pos_x: curState.frog.pos_x + curEvent.x_move,
+          pos_y: curState.frog.pos_y + curEvent.y_move
         }
       }
       : tick(curState)//Make this empty for now
@@ -157,7 +137,7 @@ function main() {
     moveUp = keyPressed('keyDown', 'ArrowUp' || 'w', () => new Move(0, Constants.playerMoveDis)),
     moveDown = keyPressed('keyDown', 'ArrowDown' || 's', () => new Move(-Constants.playerMoveDis, 0)),
     moveIdle = keyPressed('keyUp', 'ArrowLeft' && 'ArrowRight' && 'ArrowUp' && 'ArrowDown' && 'a' && 'd' && 'w' && 's', () => new Move(0,0))
-
+  
   /**
    * Merges all game states into one stream
    * Derived from the Astreoid FRP
@@ -170,7 +150,49 @@ function main() {
     moveIdle
   ).
     pipe(scan(currentState, initialState)).
-    subscribe() //continue later => make update view
+    subscribe(updateView) //continue later => make update view
+
+  /**
+   * "Update is called once per frame"
+   * Derived from the Astreoid FRP
+   * @param theState The current state to update to the next frame
+   */
+    function updateView(theState: State)
+  {
+    const
+      // Get the canvas to be able to refer to the elements
+      svg = document.getElementById("svgCanvas")!,
+
+      //Update all bodies on screen
+      updateBodyView = (body: Body, canvas: HTMLElement) => 
+      {
+        //Recreate the html object in case it doesn't spawn for this frame
+        const createBodyView = () =>
+        {
+          //Shape is hardcoded... perish
+          const updateBody = document.createElementNS(canvas.namespaceURI, "ellipse");
+
+          //Set its id
+          updateBody.setAttribute("id", body.ID);
+
+          //Add to HTML and return
+          canvas.appendChild(updateBody);
+          return updateBody;
+        }
+        
+        const updateBody = document.getElementById(body.ID) || createBodyView()
+
+        //Condition so the body that gets updated is the appropiate variables
+        //dealing only with the circles for now
+        updateBody.setAttribute("cx", String(body.pos_x))
+        updateBody.setAttribute("cy", String(body.pos_y))
+        updateBody.setAttribute("rx", String(20))   //this is hardcoded... perish
+        updateBody.setAttribute("ry", String(20))   //this is hardcoded... perish
+      }
+    
+    // Update the body of the frog
+    updateBodyView(theState.frog, svg)
+  }
 
 }
 
