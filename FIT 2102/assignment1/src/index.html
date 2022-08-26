@@ -1,13 +1,16 @@
 <html>
   <head>
     <title>FIT2102 A1 2022</title>
+    <script src="../dist/main.js"></script>
   </head>
+  
   <body>
     <h1>Frogger</h1>
     <!--All elements are drawn hard coded-ly-->
     <svg id="svgCanvas" width="600" height="600" style="background-color:black";>
       <g>
-        <ellipse id = "frog" fill = "green" transform = "translate(300, 550)" rx = "20" ry = "20" />
+        <ellipse id = "frog" fill = "green" rx = "20" ry = "20" />
+        <rect id = "car" fill = "orange" />
       </g>
     </svg>
   </body>
