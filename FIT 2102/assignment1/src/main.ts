@@ -1,5 +1,5 @@
 import "./style.css";
-import { interval, fromEvent, Observable, merge } from 'rxjs'
+import { interval, fromEvent, Observable, merge, from } from 'rxjs'
 import { map, filter, subscribeOn, scan, elementAt } from "rxjs/operators";
 
 function main() {
@@ -32,7 +32,9 @@ function main() {
     CanvasSize: 600,                // The canvas you are working with is 600x600
     playerSpawnPoint: [300, 500],   // Where the player will spawn
     playerMoveDis: 40,              // Store the distance the player should move
-    defaultEnemyMoveDis: 1          // Store the distance a normal enemy should move
+    playerRadius: 20,               // Store the radius of the player (make sure this syncs with whats in the html)
+    defaultEnemyMoveDis: 1,         // Store the distance a normal enemy should move
+    carSize: [40, 80]               // Store car size [0] for height and [1] for width (just for note)
   } as const;
   
   /**
@@ -53,7 +55,9 @@ function main() {
   interface IBody extends Circle, Rectangle{
     ID: string,
     shapeID: string,
-    speed: number;
+    speed: number,
+    size?: number[],
+    color?: string
   }
 
   // Body object, made from its interface
@@ -76,16 +80,18 @@ function main() {
   /**
    * Function that creates the enemies!
    */
-  function createEnemy(xPosition: number, yPosition: number, movementSpeed: number): Body
-  {
-    return{
-      ID: "car",
-      shapeID: "rect",
+  const createEnemy = (xPosition: number, yPosition: number, movementSpeed: number, enemyID: String, shapeID: String) => 
+                      (color: String, size: Readonly<number[]>) =>
+    <Body>{
+      //Set the body object
+      ID: enemyID + (xPosition + ""),
+      shapeID: shapeID,
       pos_x: xPosition,
       pos_y: yPosition,
-      speed: movementSpeed
-    };
-  }
+      speed: movementSpeed,
+      size: size,
+      color: color
+    }
   
   /**
    * The game state type, taken from the Astreoid FRP
@@ -104,7 +110,7 @@ function main() {
   {
     time: 0,
     frog: createPlayer(),
-    cars: [createEnemy(0, 350, 1)],
+    cars: [createEnemy(0, 360, 1, "car", "rect")("orange", Constants.carSize), createEnemy(-160, 360, 1, "car", "rect")("orange", Constants.carSize), createEnemy(-320, 360, 1, "car", "rect")("orange", Constants.carSize)],
     gameOver: false
   }
 
@@ -215,40 +221,62 @@ function main() {
         const createBodyView = () =>
         {
           //Shape is hardcoded... perish
-          const updateBody = document.createElementNS(canvas.namespaceURI, "ellipse");
+          const updateBody = document.createElementNS(canvas.namespaceURI, body.shapeID);
 
           //Set its id
           updateBody.setAttribute("id", body.ID);
-
-          //Add to HTML and return
-          canvas.appendChild(updateBody);
+          
+          //Different steps for different shapes
+          body.shapeID == "rect" ?
+          (updateBody.setAttribute("x", String(body.pos_x)),
+          updateBody.setAttribute("y", String(body.pos_y)),
+          //Size is an optional variable
+          body.size ?
+            (updateBody.setAttribute("width", String(body.size[1])), 
+            updateBody.setAttribute("height", String(body.size[0])))
+            :
+            0,
+          //Color is an optional variable
+          body.color ?
+            (updateBody.setAttribute("style", "fill: " + body.color + "; stroke: " + body.color + "; stroke-width: 1px;"))
+            :
+            0,
+          canvas.appendChild(updateBody))
+          :
+          canvas.appendChild(updateBody)
           return updateBody;
         }
-        
-        // const updateBody = (elem: Element, shape: String) =>
-        // {
-        //   shape == "ellipse" ?
-        //   updateBody
-        //   elem.setAttribute("cx", String(body.pos_x))
-        //   elem.setAttribute("cy", String(body.pos_y))
-        //   elem.setAttribute("rx", String(20))   //this is hardcoded... perish
-        //   elem.setAttribute("ry", String(20))   //this is hardcoded... perish
-        //   :
-        //   elem.
-        // }
+
+        //Updating ellipses
+        const updateEllipse = () =>
+        {
+          updateBody.setAttribute("cx", String(body.pos_x))
+          updateBody.setAttribute("cy", String(body.pos_y))
+          updateBody.setAttribute("rx", String(Constants.playerRadius))  
+          updateBody.setAttribute("ry", String(Constants.playerRadius))
+        }
+
+        //Updating rects
+        const updatingRect = () =>
+        {
+          updateBody.setAttribute("x", String(body.pos_x))
+          updateBody.setAttribute("y", String(body.pos_y))
+          updateBody.setAttribute("width", String(Constants.carSize[1]))   
+          updateBody.setAttribute("height", String(Constants.carSize[0]))
+        }
         
         const updateBody = document.getElementById(body.ID) || createBodyView()
 
-        //Condition so the body that gets updated is the appropiate variables
-        //dealing only with the circles for now
-        updateBody.setAttribute("cx", String(body.pos_x))
-        updateBody.setAttribute("cy", String(body.pos_y))
-        updateBody.setAttribute("rx", String(20))   //this is hardcoded... perish
-        updateBody.setAttribute("ry", String(20))   //this is hardcoded... perish
+        body.shapeID == "ellipse" ?
+        updateEllipse()
+        :
+        updatingRect()
       }
     
-    // Update the body of the frog
+    // Update all bodies 
     updateBodyView(theState.frog, svg)
+    theState.cars.forEach((cars => updateBodyView(cars, svg)))
+
   }
 
 }
@@ -261,18 +289,20 @@ if (typeof window !== "undefined") {
 }
 
 /** Latest progress
- *  + Turning the 'updateBodyView' to be more modular (Line 228)
- *  + Might be able to be done by somply having two 'updateBodyView' one for the circle and the other for squares
+ *  + Make all of the car lanes (line 113)
  * 
  *  Trello but not really
- *  + Enemy object moves
  *  + Clamp screen
- *  + Make the enemy works like a train
  *  + Give independent bodies the ability to hide and unhide on command
+ *  + Collision system
+ *  + Life system
+ *  + Game Over system
  * 
  *  Done:
  *  + Implement engine
  *  + Player Movement
+ *  + Enemy object moves
+ *  + Make the enemy works like a train
  * 
  *  Note:
  *  1. Crocodile: can stand on its body, but not the head
@@ -282,12 +312,23 @@ if (typeof window !== "undefined") {
  *  5. Nothing moves in a grid, this even includes the frog
  * 
  *  Report:
- *  In order to move a circle, you first make the universe. The first thing to make is 
+ *  In order to move a circle, you first make the universe, this is done by making 
  *  the frame updating cycle, this is done between the 'mainGameStream' and 'updateView'. 'mainGameStream' 
- *  merges all possible actions that can be done in the game into the 'currentState' to create the next state
+ *  merges all possible events that can be done in the game into the 'currentState' to create the next state
  *  ('initialState'), then passes it to the 'updateView' to render what that next state should look like. This
- *  is done so that everything in the game can be updated only once per *frame
+ *  is done so that everything in the game can be updated only once per frame.
  * 
- *  *frame refers to the interaction between 'gameClock' and 'tick', where 'gameClock' makes a stream of 'tick'
- *   with the given interval (which right now is set to 20ms to represent how long a frame shows up in ≈60 FPS)
+ *  Frame refers to the interaction between 'gameClock' and 'tick', where 'gameClock' makes a stream of 'tick'
+ *  with a given interval (which right now is set to 20ms to represent how long a frame shows up in ≈60 FPS).
+ * 
+ *  After creating the universe, next is to move some circles and rectangles. One thing to note is, I decided to 
+ *  make everything but the player a rectangle, so that the systems between player and non-player are easily seperatable.
+ * 
+ *  The player's movement are managed by the 'mainGameStream' where the act of the player pressing a direction is considered
+ *  as an event, where the enemies' movements are managed by the 'updateView'. In the 'updateView' method it can be seen that 
+ *  rendering the player object requires a lot less steps than non-player objects, this is because a lot of the player's attributes 
+ *  are already written in the html file, giving the player some permemnance to their attributes, the other objects are not given 
+ *  the same treatment because of ID issues, there will be several copies of the same non-player object in the game, and if all of 
+ *  them have the same ID in the html, then all distinct copies will have the same attributes, so instead, their attributes are made 
+ *  in the 'initialState'.
  */
