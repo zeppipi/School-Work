@@ -29,12 +29,13 @@ function main() {
   // Store constants
   const Constants = 
   {
+    gridSize: 20,                   // This game will run with grids size of 20x20
     CanvasSize: 600,                // The canvas you are working with is 600x600
-    playerSpawnPoint: [300, 500],   // Where the player will spawn
+    playerSpawnPoint: [300, 540],   // Where the player will spawn
     playerMoveDis: 40,              // Store the distance the player should move
-    playerRadius: 20,               // Store the radius of the player (make sure this syncs with whats in the html)
-    defaultEnemyMoveDis: 1,         // Store the distance a normal enemy should move
-    carSize: [40, 80]               // Store car size [0] for height and [1] for width (just for note)
+    playerRadius: 18,               // Store the radius of the player (make sure this syncs with whats in the html)
+    carSize: [38, 78],              // Store car size [0] for height and [1] for width
+    kartsSize: [38, 48]             // Same for cars 
   } as const;
   
   /**
@@ -100,6 +101,7 @@ function main() {
     time:number,
     frog:Body,
     cars:ReadonlyArray<Body>,
+    karts: ReadonlyArray<Body>,
     gameOver:boolean
   }>
 
@@ -110,7 +112,8 @@ function main() {
   {
     time: 0,
     frog: createPlayer(),
-    cars: [createEnemy(0, 360, 1, "car", "rect")("orange", Constants.carSize), createEnemy(-160, 360, 1, "car", "rect")("orange", Constants.carSize), createEnemy(-320, 360, 1, "car", "rect")("orange", Constants.carSize)],
+    cars: [createEnemy(200, 440, 1, "car", "rect")("orange", Constants.carSize), createEnemy(400, 440, 1, "car", "rect")("orange", Constants.carSize), createEnemy(600 , 440, 1, "car", "rect")("orange", Constants.carSize)],
+    karts: [createEnemy(100, 400, -3, "karts", "rect")("lightgreen", Constants.kartsSize), createEnemy(250, 400, -3, "karts", "rect")("lightgreen", Constants.kartsSize), createEnemy(450, 400, -3, "karts", "rect")("lightgreen", Constants.kartsSize), createEnemy(600, 400, -3, "karts", "rect")("lightgreen", Constants.kartsSize)],
     gameOver: false
   }
 
@@ -120,10 +123,15 @@ function main() {
   const currentState = (curState: State, curEvent: Move | Tick) =>
     curEvent instanceof Move ?
       {...curState,
-        frog: 
-        { ...curState.frog,
+        frog: clamp(curState.frog.pos_x + curEvent.x_move, curState.frog.pos_y + curEvent.y_move) ?
+        {   
+          ...curState.frog,
           pos_x: curState.frog.pos_x + curEvent.x_move,
           pos_y: curState.frog.pos_y + curEvent.y_move
+        }
+        :
+        {
+          ...curState.frog
         }
       }
       : tick(curState, curEvent.elapsed)//Make this empty for now
@@ -131,10 +139,11 @@ function main() {
   /**
    * What happens on each state in relation to the whole game
    */
-  const tick = (curState: State , elapsed: number) =>
+  const tick = (curState: State , elapsed: number): State =>
   {
     return {...curState,
-      cars: curState.cars.map(moveBody),
+      cars: curState.cars.map(car => moveBody(car)),
+      karts: curState.karts.map(kart => moveBody(kart)),
       time: elapsed
     };
   }
@@ -185,8 +194,37 @@ function main() {
    */
   const moveBody = (curBody: Body) => <Body>
   {
-    ...curBody,
-    pos_x: curBody.pos_x + curBody.speed
+      ...curBody,
+    // This 'if statement' is to give the objects the ability to warp when out of bounds
+    pos_x: curBody.speed >= 0 ? // For objects moving left to right
+      curBody.pos_x + curBody.speed > Constants.CanvasSize  ? 
+        curBody.size ? 
+          0 - curBody.size[1] 
+        : 
+        0
+      : 
+      curBody.pos_x + curBody.speed 
+    :
+      curBody.size ?  // For objects moving right to left
+        curBody.pos_x + curBody.speed < 0 - curBody.size[1] ?
+          Constants.CanvasSize
+        :
+        curBody.pos_x + curBody.speed
+      :
+      0
+  }
+
+  /**
+   * Determines if the given positions are a valid position in the canvas,
+   * if false then it is not and if true then it is
+   * 
+   * @param curPosx The x position to be evaluated
+   * @param curPosy The y position to be evaluated
+   * @returns a boolean
+   */
+  const clamp = (curPosx: number, curPosy: number): boolean =>
+  {
+    return curPosx < Constants.CanvasSize && curPosx > 0 && curPosy < Constants.CanvasSize && curPosy > 0 ? true : false
   }
 
   /**
@@ -261,8 +299,13 @@ function main() {
         {
           updateBody.setAttribute("x", String(body.pos_x))
           updateBody.setAttribute("y", String(body.pos_y))
-          updateBody.setAttribute("width", String(Constants.carSize[1]))   
-          updateBody.setAttribute("height", String(Constants.carSize[0]))
+          body.size ?
+          (
+            updateBody.setAttribute("width", String(body.size[1])),   
+            updateBody.setAttribute("height", String(body.size[0]))
+          )
+          :
+          0
         }
         
         const updateBody = document.getElementById(body.ID) || createBodyView()
@@ -275,7 +318,8 @@ function main() {
     
     // Update all bodies 
     updateBodyView(theState.frog, svg)
-    theState.cars.forEach((cars => updateBodyView(cars, svg)))
+    theState.cars.forEach((body => updateBodyView(body, svg)))
+    theState.karts.forEach((body => updateBodyView(body, svg)))
 
   }
 
@@ -289,12 +333,13 @@ if (typeof window !== "undefined") {
 }
 
 /** Latest progress
- *  + Make all of the car lanes (line 113)
+ *  + Make all of the car lanes (line 116)
  * 
  *  Trello but not really
- *  + Clamp screen
+ *  + Make the car lanes
  *  + Give independent bodies the ability to hide and unhide on command
  *  + Collision system
+ *  + Make the log lanes
  *  + Life system
  *  + Game Over system
  * 
@@ -303,6 +348,8 @@ if (typeof window !== "undefined") {
  *  + Player Movement
  *  + Enemy object moves
  *  + Make the enemy works like a train
+ *  + Clamp player
+ *  + Warp NPCs
  * 
  *  Note:
  *  1. Crocodile: can stand on its body, but not the head
