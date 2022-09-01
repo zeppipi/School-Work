@@ -24,7 +24,7 @@ function main() {
 
   // Store the possible game actions
   class Move {constructor(public readonly x_move: number, readonly y_move: number) {} }  // A move state
-  class Tick {constructor(public readonly elapsed: number) {} }                             // A clock
+  class Tick {constructor(public readonly elapsed: number) {} }                          // A clock
   
   // Store constants
   const Constants = 
@@ -35,7 +35,9 @@ function main() {
     playerMoveDis: 40,              // Store the distance the player should move
     playerRadius: 18,               // Store the radius of the player (make sure this syncs with whats in the html)
     carSize: [38, 78],              // Store car size [0] for height and [1] for width
-    kartsSize: [38, 48]             // Same for cars 
+    kartsSize: [38, 48],            // Same for karts
+    vansSize: [38, 93],             // Same for vans
+    truckSize: [38, 158]            // Same for trucks
   } as const;
   
   /**
@@ -79,8 +81,27 @@ function main() {
   }
 
   /**
-   * Function that creates the enemies!
+   * A function that makes several enemies at once, made so that 'createEnemy' don't need to be called
+   * so many times
+   * 
+   * @returns A list of bodies
    */
+  const createEnemies = 
+    (size: Readonly<number[]>, color: String, enemyID: String, shapeID: String, movementSpeed: number) =>
+    (positionsX: Readonly<number[]>, positionsY: Readonly<number>[], counter: number, enemies: Body[]): Body[] => 
+      {
+        return counter > -1 ? 
+          createEnemies(size, color, enemyID, shapeID, movementSpeed)(positionsX, positionsY, counter - 1, [createEnemy(positionsX[counter], positionsY[counter], movementSpeed, enemyID, shapeID)(color, size)].concat(enemies))
+        :
+          enemies
+      }
+          
+  
+  /**
+  * A function that creates an enemy!
+  * 
+  * @returns A single body
+  */
   const createEnemy = (xPosition: number, yPosition: number, movementSpeed: number, enemyID: String, shapeID: String) => 
                       (color: String, size: Readonly<number[]>) =>
     <Body>{
@@ -102,6 +123,8 @@ function main() {
     frog:Body,
     cars:ReadonlyArray<Body>,
     karts: ReadonlyArray<Body>,
+    vans: ReadonlyArray<Body>,
+    trucks: ReadonlyArray<Body>,
     gameOver:boolean
   }>
 
@@ -112,15 +135,18 @@ function main() {
   {
     time: 0,
     frog: createPlayer(),
-    cars: [createEnemy(200, 440, 1, "car", "rect")("orange", Constants.carSize), createEnemy(400, 440, 1, "car", "rect")("orange", Constants.carSize), createEnemy(600 , 440, 1, "car", "rect")("orange", Constants.carSize)],
-    karts: [createEnemy(100, 400, -3, "karts", "rect")("lightgreen", Constants.kartsSize), createEnemy(250, 400, -3, "karts", "rect")("lightgreen", Constants.kartsSize), createEnemy(450, 400, -3, "karts", "rect")("lightgreen", Constants.kartsSize), createEnemy(600, 400, -3, "karts", "rect")("lightgreen", Constants.kartsSize)],
+    cars: createEnemies(Constants.carSize, "orange", "car", "rect", 2.5)([200, 400, 600], [440, 440, 440], 2, []),
+    karts: createEnemies(Constants.kartsSize, "lightgreen", "karts", "rect", -4)([100, 250, 450, 600], [400, 400, 400, 400], 3, []),
+    vans: createEnemies(Constants.vansSize, "white", "vans", "rect", 2)([100, 300, 500], [360, 360, 360], 2, []),
+    trucks: createEnemies(Constants.truckSize, "red", "trucks", "rect", -1.8)([0, 250, 500], [320, 320, 320], 2, []),
     gameOver: false
   }
 
   /**
    * What happens on each state in relation to the events
    */
-  const currentState = (curState: State, curEvent: Move | Tick) =>
+  const currentState = (curState: State, curEvent: Move | Tick ) =>
+    // For when move happens
     curEvent instanceof Move ?
       {...curState,
         frog: clamp(curState.frog.pos_x + curEvent.x_move, curState.frog.pos_y + curEvent.y_move) ?
@@ -134,7 +160,8 @@ function main() {
           ...curState.frog
         }
       }
-      : tick(curState, curEvent.elapsed)//Make this empty for now
+    : 
+    tick(curState, curEvent.elapsed)
   
   /**
    * What happens on each state in relation to the whole game
@@ -144,6 +171,8 @@ function main() {
     return {...curState,
       cars: curState.cars.map(car => moveBody(car)),
       karts: curState.karts.map(kart => moveBody(kart)),
+      vans: curState.vans.map(vans => moveBody(vans)),
+      trucks: curState.trucks.map(trucks => moveBody(trucks)),
       time: elapsed
     };
   }
@@ -320,6 +349,8 @@ function main() {
     updateBodyView(theState.frog, svg)
     theState.cars.forEach((body => updateBodyView(body, svg)))
     theState.karts.forEach((body => updateBodyView(body, svg)))
+    theState.vans.forEach((body => updateBodyView(body, svg)))
+    theState.trucks.forEach((body => updateBodyView(body, svg)))
 
   }
 
@@ -333,10 +364,9 @@ if (typeof window !== "undefined") {
 }
 
 /** Latest progress
- *  + Make all of the car lanes (line 116)
+ *  + Make collisions (how?)
  * 
  *  Trello but not really
- *  + Make the car lanes
  *  + Give independent bodies the ability to hide and unhide on command
  *  + Collision system
  *  + Make the log lanes
@@ -350,6 +380,7 @@ if (typeof window !== "undefined") {
  *  + Make the enemy works like a train
  *  + Clamp player
  *  + Warp NPCs
+ *  + Make the car lanes
  * 
  *  Note:
  *  1. Crocodile: can stand on its body, but not the head
