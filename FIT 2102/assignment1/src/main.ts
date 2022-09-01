@@ -34,10 +34,12 @@ function main() {
     playerSpawnPoint: [300, 540],   // Where the player will spawn
     playerMoveDis: 40,              // Store the distance the player should move
     playerRadius: 18,               // Store the radius of the player (make sure this syncs with whats in the html)
-    carSize: [38, 78],              // Store car size [0] for height and [1] for width
-    kartsSize: [38, 48],            // Same for karts
-    vansSize: [38, 93],             // Same for vans
-    truckSize: [38, 158]            // Same for trucks
+    enemyHeights: 40,               // Store the height of every non-player objects
+    enemySizeMargins: 2,            // Store the margins of every non-player objects
+    // carSize: [38, 78],              // Store car size [0] for height and [1] for width
+    // kartsSize: [38, 48],            // Same for karts
+    // vansSize: [38, 93],             // Same for vans
+    // truckSize: [38, 158]            // Same for trucks
   } as const;
   
   /**
@@ -59,7 +61,8 @@ function main() {
     ID: string,
     shapeID: string,
     speed: number,
-    size?: number[],
+    size: number,
+    sizeWidthMulti: number,
     color?: string
   }
 
@@ -76,7 +79,9 @@ function main() {
       shapeID: "ellipse",
       pos_x: Constants.playerSpawnPoint[0],
       pos_y: Constants.playerSpawnPoint[1],
-      speed: 0
+      speed: 0,
+      size: 0,
+      sizeWidthMulti: 0
     };
   }
 
@@ -87,11 +92,11 @@ function main() {
    * @returns A list of bodies
    */
   const createEnemies = 
-    (size: Readonly<number[]>, color: String, enemyID: String, shapeID: String, movementSpeed: number) =>
+    (size: number, sizeWidthMulti: number, color: String, enemyID: String, shapeID: String, movementSpeed: number) =>
     (positionsX: Readonly<number[]>, positionsY: Readonly<number>[], counter: number, enemies: Body[]): Body[] => 
       {
         return counter > -1 ? 
-          createEnemies(size, color, enemyID, shapeID, movementSpeed)(positionsX, positionsY, counter - 1, [createEnemy(positionsX[counter], positionsY[counter], movementSpeed, enemyID, shapeID)(color, size)].concat(enemies))
+          createEnemies(size, sizeWidthMulti, color, enemyID, shapeID, movementSpeed)(positionsX, positionsY, counter - 1, [createEnemy(positionsX[counter], positionsY[counter], movementSpeed, enemyID, shapeID)(color, size, sizeWidthMulti)].concat(enemies))
         :
           enemies
       }
@@ -103,7 +108,7 @@ function main() {
   * @returns A single body
   */
   const createEnemy = (xPosition: number, yPosition: number, movementSpeed: number, enemyID: String, shapeID: String) => 
-                      (color: String, size: Readonly<number[]>) =>
+                      (color: String, size: number, sizeWidthMulti: number) =>
     <Body>{
       //Set the body object
       ID: enemyID + (xPosition + ""),
@@ -112,6 +117,7 @@ function main() {
       pos_y: yPosition,
       speed: movementSpeed,
       size: size,
+      sizeWidthMulti: sizeWidthMulti,
       color: color
     }
   
@@ -135,10 +141,10 @@ function main() {
   {
     time: 0,
     frog: createPlayer(),
-    cars: createEnemies(Constants.carSize, "orange", "car", "rect", 2.5)([200, 400, 600], [440, 440, 440], 2, []),
-    karts: createEnemies(Constants.kartsSize, "lightgreen", "karts", "rect", -4)([100, 250, 450, 600], [400, 400, 400, 400], 3, []),
-    vans: createEnemies(Constants.vansSize, "white", "vans", "rect", 2)([100, 300, 500], [360, 360, 360], 2, []),
-    trucks: createEnemies(Constants.truckSize, "red", "trucks", "rect", -1.8)([0, 250, 500], [320, 320, 320], 2, []),
+    cars: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 2, "orange", "car", "rect", 2.5)([200, 400, 600], [440, 440, 440], 2, []),
+    karts: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 1.3, "lightgreen", "karts", "rect", -4)([100, 250, 450, 600], [400, 400, 400, 400], 3, []),
+    vans: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 2.3, "white", "vans", "rect", 2)([100, 300, 500], [360, 360, 360], 2, []),
+    trucks: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 4, "red", "trucks", "rect", -1.8)([0, 250, 500], [320, 320, 320], 2, []),
     gameOver: false
   }
 
@@ -168,6 +174,7 @@ function main() {
    */
   const tick = (curState: State , elapsed: number): State =>
   {
+    // Returns state
     return {...curState,
       cars: curState.cars.map(car => moveBody(car)),
       karts: curState.karts.map(kart => moveBody(kart)),
@@ -176,6 +183,42 @@ function main() {
       time: elapsed
     };
   }
+
+  /**
+   * Checks collisions between a single body with a list of bodies
+   * If true, play the given function, if false, body is left alone
+   * 
+   * @param bodyList the list of bodies
+   * @param singleBody the single body to check
+   * @param eventFunction what event should happen when a collision happens
+   */
+  const collisionHandler = (bodyList: Body[], singleBody: Body, eventFunction: (_:Body) => Body) =>
+  {
+    const auxCollisionFunc = (acc: number, bodyListAux: Body[], singleBodyAux: Body): number =>
+    {
+      return bodyListAux ? 
+        auxCollisionFunc((acc + ((
+          (bodyListAux[bodyListAux.length - 1].pos_x > singleBodyAux.pos_x) &&
+          (bodyListAux[bodyListAux.length - 1].pos_x + ((bodyListAux[bodyListAux.length - 1].size * bodyListAux[bodyListAux.length - 1].sizeWidthMulti) - Constants.enemySizeMargins) < singleBodyAux.pos_x) &&
+          (bodyListAux[bodyListAux.length - 1].pos_y > singleBodyAux.pos_y) &&
+          (bodyListAux[bodyListAux.length - 1].pos_y + (bodyListAux[bodyListAux.length - 1].size - Constants.enemySizeMargins) < singleBodyAux.pos_x)
+        ) ? 1 : 0)), popImm(bodyListAux, bodyListAux.length - 2), singleBody)
+      :
+      acc    
+    }
+    
+    return auxCollisionFunc(0, bodyList, singleBody) ? eventFunction(singleBody) : singleBody
+  }
+
+  /**
+   * A immutable pop function
+   */
+  function popImm<T>(theList: T[], popEnd: number, resList: T[] = []): T[]
+  {
+    return popEnd == -1 ? resList : popImm(theList, popEnd - 1, resList).concat(resList).concat(theList[popEnd])
+  }
+
+  console.log(popImm([1,2,3], 1))
 
   //Player Move logic starts here
   /**
@@ -227,15 +270,12 @@ function main() {
     // This 'if statement' is to give the objects the ability to warp when out of bounds
     pos_x: curBody.speed >= 0 ? // For objects moving left to right
       curBody.pos_x + curBody.speed > Constants.CanvasSize  ? 
-        curBody.size ? 
-          0 - curBody.size[1] 
-        : 
-        0
+      0 - ((curBody.size * curBody.sizeWidthMulti) - Constants.enemySizeMargins)
       : 
       curBody.pos_x + curBody.speed 
     :
       curBody.size ?  // For objects moving right to left
-        curBody.pos_x + curBody.speed < 0 - curBody.size[1] ?
+        curBody.pos_x + curBody.speed < 0 - ((curBody.size * curBody.sizeWidthMulti) - Constants.enemySizeMargins) ?
           Constants.CanvasSize
         :
         curBody.pos_x + curBody.speed
@@ -297,12 +337,8 @@ function main() {
           body.shapeID == "rect" ?
           (updateBody.setAttribute("x", String(body.pos_x)),
           updateBody.setAttribute("y", String(body.pos_y)),
-          //Size is an optional variable
-          body.size ?
-            (updateBody.setAttribute("width", String(body.size[1])), 
-            updateBody.setAttribute("height", String(body.size[0])))
-            :
-            0,
+          updateBody.setAttribute("width", String((body.size * body.sizeWidthMulti) - Constants.enemySizeMargins)), 
+          updateBody.setAttribute("height", String(body.size)),
           //Color is an optional variable
           body.color ?
             (updateBody.setAttribute("style", "fill: " + body.color + "; stroke: " + body.color + "; stroke-width: 1px;"))
@@ -328,13 +364,8 @@ function main() {
         {
           updateBody.setAttribute("x", String(body.pos_x))
           updateBody.setAttribute("y", String(body.pos_y))
-          body.size ?
-          (
-            updateBody.setAttribute("width", String(body.size[1])),   
-            updateBody.setAttribute("height", String(body.size[0]))
-          )
-          :
-          0
+          updateBody.setAttribute("width", String((body.size * body.sizeWidthMulti) - Constants.enemySizeMargins)), 
+          updateBody.setAttribute("height", String(body.size))
         }
         
         const updateBody = document.getElementById(body.ID) || createBodyView()
@@ -364,7 +395,11 @@ if (typeof window !== "undefined") {
 }
 
 /** Latest progress
- *  + Make collisions (how?)
+ *  + 'size' has been refactored to not make it optional
+ *  + 'collisionHandler' is made (takes a list of bodies and one body and check if the one body has collided with any of the bodies in the list)
+ *  + 'collisionHandler' also needs to be tidied up by seperating the two functions it has or checking and recursing
+ *  + Idea is to put all bodies into a single list and run it through 'collisionHandler'
+ *  + But the idea assumes that all bodies does the same thing to the player
  * 
  *  Trello but not really
  *  + Give independent bodies the ability to hide and unhide on command
