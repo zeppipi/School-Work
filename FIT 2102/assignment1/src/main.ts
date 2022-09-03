@@ -63,7 +63,8 @@ function main() {
     speed: number,
     size: number,
     sizeWidthMulti: number,
-    color?: string
+    color?: string,
+    collidingEvent: (_: Body) => Body
   }
 
   // Body object, made from its interface
@@ -81,7 +82,8 @@ function main() {
       pos_y: Constants.playerSpawnPoint[1],
       speed: 0,
       size: 0,
-      sizeWidthMulti: 0
+      sizeWidthMulti: 0,
+      collidingEvent: Identity
     };
   }
 
@@ -93,10 +95,10 @@ function main() {
    */
   const createEnemies = 
     (size: number, sizeWidthMulti: number, color: String, enemyID: String, shapeID: String, movementSpeed: number) =>
-    (positionsX: Readonly<number[]>, positionsY: Readonly<number>[], counter: number, enemies: Body[]): Body[] => 
+    (positionsX: Readonly<number[]>, positionsY: Readonly<number>[], counter: number, collidingFunction: (_:Body) => Body, enemies: Body[]): Body[] => 
       {
         return counter > -1 ? 
-          createEnemies(size, sizeWidthMulti, color, enemyID, shapeID, movementSpeed)(positionsX, positionsY, counter - 1, [createEnemy(positionsX[counter], positionsY[counter], movementSpeed, enemyID, shapeID)(color, size, sizeWidthMulti)].concat(enemies))
+          createEnemies(size, sizeWidthMulti, color, enemyID, shapeID, movementSpeed)(positionsX, positionsY, counter - 1, collidingFunction, [createEnemy(positionsX[counter], positionsY[counter], movementSpeed, enemyID, shapeID)(color, size, sizeWidthMulti)(collidingFunction)].concat(enemies))
         :
           enemies
       }
@@ -108,7 +110,7 @@ function main() {
   * @returns A single body
   */
   const createEnemy = (xPosition: number, yPosition: number, movementSpeed: number, enemyID: String, shapeID: String) => 
-                      (color: String, size: number, sizeWidthMulti: number) =>
+                      (color: String, size: number, sizeWidthMulti: number) => (collidingFunction: (_:Body) => Body) =>
     <Body>{
       //Set the body object
       ID: enemyID + (xPosition + ""),
@@ -118,8 +120,38 @@ function main() {
       speed: movementSpeed,
       size: size,
       sizeWidthMulti: sizeWidthMulti,
-      color: color
+      color: color,
+      collidingEvent: collidingFunction
     }
+
+  /**
+   * A function to reset a body to their spawn position
+   * 
+   * @param player This function is specifically for the player
+   * @returns 
+   */
+  const Reset = (player: Body) => <Body>
+  {
+   ...player,
+   pos_x: Constants.playerSpawnPoint[0],
+   pos_y: Constants.playerSpawnPoint[1]
+  }
+
+  /**
+  * A function that does nothing to the inserted body
+  * 
+  * @param player For the player
+  * @returns 
+  */
+  const Identity = (player: Body) => <Body>
+  {
+    ...player
+  }
+
+  /**
+   * An empty body for when something went terrible wrong
+   */
+  const emptyBody = createEnemy(0,0,0, "Wrong", "rect")("white", 300, 1)(Identity)
   
   /**
    * The game state type, taken from the Astreoid FRP
@@ -141,10 +173,10 @@ function main() {
   {
     time: 0,
     frog: createPlayer(),
-    cars: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 2, "orange", "car", "rect", 2.5)([200, 400, 600], [440, 440, 440], 2, []),
-    karts: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 1.3, "lightgreen", "karts", "rect", -4)([100, 250, 450, 600], [400, 400, 400, 400], 3, []),
-    vans: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 2.3, "white", "vans", "rect", 2)([100, 300, 500], [360, 360, 360], 2, []),
-    trucks: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 4, "red", "trucks", "rect", -1.8)([0, 250, 500], [320, 320, 320], 2, []),
+    cars: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 2, "orange", "car", "rect", 2.5)([200, 400, 600], [440, 440, 440], 2, Reset, []),
+    karts: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 1.3, "lightgreen", "karts", "rect", -4)([100, 250, 450, 600], [400, 400, 400, 400], 3, Reset, []),
+    vans: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 2.3, "white", "vans", "rect", 2)([100, 300, 500], [360, 360, 360], 2, Reset, []),
+    trucks: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 4, "red", "trucks", "rect", -1.8)([0, 250, 500], [320, 320, 320], 2, Reset, []),
     gameOver: false
   }
 
@@ -174,12 +206,17 @@ function main() {
    */
   const tick = (curState: State , elapsed: number): State =>
   {
+    //Combine all non-player bodies
+    const allBodies = curState.cars.concat(curState.karts).concat(curState.vans).concat(curState.trucks)
+
     // Returns state
     return {...curState,
       cars: curState.cars.map(car => moveBody(car)),
       karts: curState.karts.map(kart => moveBody(kart)),
       vans: curState.vans.map(vans => moveBody(vans)),
       trucks: curState.trucks.map(trucks => moveBody(trucks)),
+      //frog: curState.frog,
+      frog: collisionsHandler(allBodies, curState.frog),
       time: elapsed
     };
   }
@@ -192,33 +229,34 @@ function main() {
    * @param singleBody the single body to check
    * @param eventFunction what event should happen when a collision happens
    */
-  const collisionHandler = (bodyList: Body[], singleBody: Body, eventFunction: (_:Body) => Body) =>
+  const collisionsHandler = (bodyList: Body[], singleBody: Body): Body =>
   {
-    const auxCollisionFunc = (acc: number, bodyListAux: Body[], singleBodyAux: Body): number =>
+    const auxCollisionFunc = (bodyListAux: Body[], singleBodyAux: Body): Body =>
     {
-      return bodyListAux ? 
-        auxCollisionFunc((acc + ((
-          (bodyListAux[bodyListAux.length - 1].pos_x > singleBodyAux.pos_x) &&
-          (bodyListAux[bodyListAux.length - 1].pos_x + ((bodyListAux[bodyListAux.length - 1].size * bodyListAux[bodyListAux.length - 1].sizeWidthMulti) - Constants.enemySizeMargins) < singleBodyAux.pos_x) &&
-          (bodyListAux[bodyListAux.length - 1].pos_y > singleBodyAux.pos_y) &&
-          (bodyListAux[bodyListAux.length - 1].pos_y + (bodyListAux[bodyListAux.length - 1].size - Constants.enemySizeMargins) < singleBodyAux.pos_x)
-        ) ? 1 : 0)), popImm(bodyListAux, bodyListAux.length - 2), singleBody)
-      :
-      acc    
+      const collidedBodies = bodyListAux.map((currentBodyList) => isColliding(currentBodyList, singleBodyAux) ? currentBodyList : null)
+      const filteredCollidedBodies = collidedBodies.filter((current) => current ? current : null)
+
+      //In the list of collided bodies, only the first one will be needed to know if the player has collided
+      return filteredCollidedBodies[0]? filteredCollidedBodies[0].collidingEvent(singleBodyAux) : singleBodyAux;
+      
     }
-    
-    return auxCollisionFunc(0, bodyList, singleBody) ? eventFunction(singleBody) : singleBody
+    return auxCollisionFunc(bodyList, singleBody)
   }
 
   /**
-   * A immutable pop function
+   * Checks if the collider is colliding with the collidee
+   * 
+   * @param collider The instigator (enemy here)
+   * @param collidee The victim (player here)
+   * @returns True for they did and false for nah
    */
-  function popImm<T>(theList: T[], popEnd: number, resList: T[] = []): T[]
+  const isColliding = (collider: Body, collidee: Body): boolean =>
   {
-    return popEnd == -1 ? resList : popImm(theList, popEnd - 1, resList).concat(resList).concat(theList[popEnd])
-  }
+    return collidee.pos_x < collider.pos_x || collidee.pos_x > (collider.pos_x + ((collider.size * collider.sizeWidthMulti) - Constants.enemySizeMargins)) 
+            ? false : collidee.pos_y < collider.pos_y || collidee.pos_y > (collider.pos_y + (collider.size - Constants.enemySizeMargins)) 
+            ? false : true
 
-  console.log(popImm([1,2,3], 1))
+  }
 
   //Player Move logic starts here
   /**
@@ -395,16 +433,12 @@ if (typeof window !== "undefined") {
 }
 
 /** Latest progress
- *  + 'size' has been refactored to not make it optional
- *  + 'collisionHandler' is made (takes a list of bodies and one body and check if the one body has collided with any of the bodies in the list)
- *  + 'collisionHandler' also needs to be tidied up by seperating the two functions it has or checking and recursing
- *  + Idea is to put all bodies into a single list and run it through 'collisionHandler'
- *  + But the idea assumes that all bodies does the same thing to the player
+ *  + COLLISION DONE HOLY SHIT
+ *  + Next is make their logs and their respective function
  * 
  *  Trello but not really
- *  + Give independent bodies the ability to hide and unhide on command
- *  + Collision system
  *  + Make the log lanes
+ *  + Give independent bodies the ability to hide and unhide on command
  *  + Life system
  *  + Game Over system
  * 
@@ -416,6 +450,7 @@ if (typeof window !== "undefined") {
  *  + Clamp player
  *  + Warp NPCs
  *  + Make the car lanes
+ *  + Collision system
  * 
  *  Note:
  *  1. Crocodile: can stand on its body, but not the head
@@ -444,4 +479,9 @@ if (typeof window !== "undefined") {
  *  the same treatment because of ID issues, there will be several copies of the same non-player object in the game, and if all of 
  *  them have the same ID in the html, then all distinct copies will have the same attributes, so instead, their attributes are made 
  *  in the 'initialState'.
+ * 
+ *  The collision system runs in the 'tick' function where in every tick, the player will check if they are colliding
+ *  with all of the non-player bodies (the list of all non-player bodies are made by simply concatonating all of the
+ *  distinct list of bodies). And when the player is colliding with one of them, it will call the function that is
+ *  being held by that body, and throw itself into it. 
  */
