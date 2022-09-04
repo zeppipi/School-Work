@@ -3,13 +3,22 @@
     <title>FIT2102 A1 2022</title>
     <script src="../dist/main.js"></script>
   <script defer src="main.js"></script></head>
+  <style>
+    .obs{
+      z-index: -1;
+    }
+
+  </style>
   
   <body>
     <h1>Frogger</h1>
-    <!--All elements are drawn hard coded-ly-->
     <svg id="svgCanvas" width="600" height="600" style="background-color:black";>
       <g>
         <ellipse id = "frog" fill = "green" rx = "18" ry = "18" />
+        <!--All bg elements are drawn hard coded-ly-->
+        <rect id = "road" fill = "grey" x = "0" y = "480" width = "600" height = "160" />
+        <rect id = "restroaf" fill = "grey" x = "0" y = 280 width = "600" height = "40" />
+        <rect id = "river" fill = "blue" x = "0" y = "80" width = "600" height = "200" />
       </g>
     </svg>
   </body>

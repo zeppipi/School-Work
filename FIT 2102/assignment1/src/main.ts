@@ -36,6 +36,7 @@ function main() {
     playerRadius: 18,               // Store the radius of the player (make sure this syncs with whats in the html)
     enemyHeights: 40,               // Store the height of every non-player objects
     enemySizeMargins: 2,            // Store the margins of every non-player objects
+    riverStart: 320                 // Store the y-location of where the river section starts
     // carSize: [38, 78],              // Store car size [0] for height and [1] for width
     // kartsSize: [38, 48],            // Same for karts
     // vansSize: [38, 93],             // Same for vans
@@ -103,7 +104,6 @@ function main() {
           enemies
       }
           
-  
   /**
   * A function that creates an enemy!
   * 
@@ -168,6 +168,7 @@ function main() {
     logs3: ReadonlyArray<Body>,
     logs4: ReadonlyArray<Body>,
     wins: ReadonlyArray<Body>,
+    snake: ReadonlyArray<Body>,
     gameOver:boolean
   }>
 
@@ -186,7 +187,8 @@ function main() {
     logs2: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 2, "brown", "logs2", "rect", -3)([0, 160, 320, 480], [200, 200, 200, 200], 3, (body) => moveBody(body, -3)),
     logs3: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 4, "brown", "logs3", "rect", 2)([0, 250, 500], [160, 160, 160], 2, (body) => moveBody(body, 2)),
     logs4: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 2, "brown", "logs4", "rect", -1.8)([0, 160, 320, 480], [120, 120, 120, 120], 3, (body) => moveBody(body, -1.8)),
-    wins: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 2, "cyan", "win", "rect", 0)([70, 270, 470], [80, 80, 80], 2, (body) => moveBody(body, 2)),
+    wins: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 2, "cyan", "win", "rect", 0)([70, 270, 470], [80, 80, 80], 2, (body) => moveBody(body, 0)),
+    snake: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins - 30, 10, "lightgreen", "snake", "rect", 0.8)([0], [295], 0, Reset),
     gameOver: false
   }
 
@@ -218,7 +220,9 @@ function main() {
   {
     //Combine all non-player bodies
     const allBodies = curState.cars.concat(curState.karts).concat(curState.vans).concat(curState.trucks).concat(curState.logs1).
-                      concat(curState.logs2).concat(curState.logs3).concat(curState.logs4).concat(curState.wins);
+                      concat(curState.logs2).concat(curState.logs3).concat(curState.logs4).concat(curState.wins).concat(curState.snake);
+
+    console.log(curState.snake);
 
     // Returns state
     return {...curState,
@@ -231,6 +235,7 @@ function main() {
       logs3: curState.logs3.map(log => moveBody(log)),
       logs4: curState.logs4.map(log => moveBody(log)),
       wins: curState.wins.map(win => moveBody(win)),
+      snake: curState.snake.map(snake => moveBody(snake)),
       frog: collisionsHandler(allBodies, curState.frog),
       time: elapsed
     };
@@ -239,6 +244,8 @@ function main() {
   /**
    * Checks collisions between a single body with a list of bodies
    * If true, play the given function, if false, body is left alone
+   * Also calls 'riverChecker' to check if the player is in the river section,
+   * in which the collision behaviours work a little differently
    * 
    * @param bodyList the list of bodies
    * @param singleBody the single body to check
@@ -252,10 +259,36 @@ function main() {
       const filteredCollidedBodies = collidedBodies.filter((current) => current ? current : null)
 
       //In the list of collided bodies, only the first one will be needed to know if the player has collided
-      return filteredCollidedBodies[0]? filteredCollidedBodies[0].collidingEvent(singleBodyAux) : singleBodyAux;
+      const collided = filteredCollidedBodies[0] ? true : false
+      const river = riverChecker(singleBodyAux)
+
+      //Check if the body is currently in the river
+      return river ? 
+        collided ?
+          filteredCollidedBodies[0] ? filteredCollidedBodies[0].collidingEvent(singleBodyAux) : singleBodyAux  //In river and colliding a body
+          :
+          Reset(singleBodyAux)  //In river but not colliding a body
+        : 
+        collided ? 
+          filteredCollidedBodies[0] ? filteredCollidedBodies[0].collidingEvent(singleBodyAux) : singleBodyAux  //Not in river and colliding with a body
+          : 
+          singleBodyAux   //Not in river and not colliding with a body
+      
+      //return filteredCollidedBodies[0]? filteredCollidedBodies[0].collidingEvent(singleBodyAux) : singleBodyAux;
       
     }
     return auxCollisionFunc(bodyList, singleBody)
+  }
+
+  /**
+   * Checks if a body is in the 'river' section
+   * 
+   * @param curBody The body to check
+   * @returns A true for 'it is in the river section' and a false for 'it isn't in the river section'
+   */
+  const riverChecker = (curBody: Body): boolean =>
+  {
+    return curBody.pos_y > Constants.riverStart;
   }
 
   /**
@@ -369,9 +402,6 @@ function main() {
   function updateView(theState: State)
   {
     const
-      // Get the canvas to be able to refer to the elements
-      //svg = document.getElementById("svgCanvas")!,
-
       //Update all bodies on screen
       updateBodyView = (body: Body, canvas: HTMLElement) => 
       {
@@ -404,10 +434,12 @@ function main() {
         //Updating ellipses
         const updateEllipse = () =>
         {
+          canvas.removeChild
           updateBody.setAttribute("cx", String(body.pos_x))
           updateBody.setAttribute("cy", String(body.pos_y))
           updateBody.setAttribute("rx", String(Constants.playerRadius))  
           updateBody.setAttribute("ry", String(Constants.playerRadius))
+          canvas.appendChild(updateBody)
         }
 
         //Updating rects
@@ -417,6 +449,7 @@ function main() {
           updateBody.setAttribute("y", String(body.pos_y))
           updateBody.setAttribute("width", String((body.size * body.sizeWidthMulti) - Constants.enemySizeMargins)), 
           updateBody.setAttribute("height", String(body.size))
+          updateBody.setAttribute("class", "obs")
         }
         
         const updateBody = document.getElementById(body.ID) || createBodyView()
@@ -428,7 +461,6 @@ function main() {
       }
     
     // Update all bodies 
-    updateBodyView(theState.frog, svg)
     theState.cars.forEach((body => updateBodyView(body, svg)))
     theState.karts.forEach((body => updateBodyView(body, svg)))
     theState.vans.forEach((body => updateBodyView(body, svg)))
@@ -438,6 +470,8 @@ function main() {
     theState.logs3.forEach((body) => updateBodyView(body, svg))
     theState.logs4.forEach((body) => updateBodyView(body, svg))
     theState.wins.forEach((body) => updateBodyView(body, svg))
+    theState.snake.forEach((body) => updateBodyView(body, svg))
+    updateBodyView(theState.frog, svg)
 
   }
 
@@ -451,8 +485,7 @@ if (typeof window !== "undefined") {
 }
 
 /** Latest progress
- *  + Logs lanes are made!
- *  + Next is to make sure the player is visibly on top of the logs lol
+ *  + Making the truth table for the river (line 266)
  * 
  *  Trello but not really
  *  + Make river
