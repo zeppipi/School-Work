@@ -95,7 +95,7 @@ function main() {
    */
   const createEnemies = 
     (size: number, sizeWidthMulti: number, color: String, enemyID: String, shapeID: String, movementSpeed: number) =>
-    (positionsX: Readonly<number[]>, positionsY: Readonly<number>[], counter: number, collidingFunction: (_:Body) => Body, enemies: Body[]): Body[] => 
+    (positionsX: Readonly<number[]>, positionsY: Readonly<number>[], counter: number, collidingFunction: (_:Body) => Body, enemies: Body[] = []): Body[] => 
       {
         return counter > -1 ? 
           createEnemies(size, sizeWidthMulti, color, enemyID, shapeID, movementSpeed)(positionsX, positionsY, counter - 1, collidingFunction, [createEnemy(positionsX[counter], positionsY[counter], movementSpeed, enemyID, shapeID)(color, size, sizeWidthMulti)(collidingFunction)].concat(enemies))
@@ -163,6 +163,11 @@ function main() {
     karts: ReadonlyArray<Body>,
     vans: ReadonlyArray<Body>,
     trucks: ReadonlyArray<Body>,
+    logs1: ReadonlyArray<Body>,
+    logs2: ReadonlyArray<Body>,
+    logs3: ReadonlyArray<Body>,
+    logs4: ReadonlyArray<Body>,
+    wins: ReadonlyArray<Body>,
     gameOver:boolean
   }>
 
@@ -173,10 +178,15 @@ function main() {
   {
     time: 0,
     frog: createPlayer(),
-    cars: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 2, "orange", "car", "rect", 2.5)([200, 400, 600], [440, 440, 440], 2, Reset, []),
-    karts: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 1.3, "lightgreen", "karts", "rect", -4)([100, 250, 450, 600], [400, 400, 400, 400], 3, Reset, []),
-    vans: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 2.3, "white", "vans", "rect", 2)([100, 300, 500], [360, 360, 360], 2, Reset, []),
-    trucks: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 4, "red", "trucks", "rect", -1.8)([0, 250, 500], [320, 320, 320], 2, Reset, []),
+    cars: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 2, "orange", "car", "rect", 2.5)([200, 400, 600], [440, 440, 440], 2, Reset),
+    karts: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 1.3, "lightgreen", "karts", "rect", -4)([100, 250, 450, 600], [400, 400, 400, 400], 3, Reset),
+    vans: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 2.3, "white", "vans", "rect", 2)([100, 300, 500], [360, 360, 360], 2, Reset),
+    trucks: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 4, "red", "trucks", "rect", -1.8)([0, 250, 500], [320, 320, 320], 2, Reset),
+    logs1: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 4, "brown", "logs1", "rect", 2)([0, 250, 500], [240, 240, 240], 2, (body) => moveBody(body, 2)),
+    logs2: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 2, "brown", "logs2", "rect", -3)([0, 160, 320, 480], [200, 200, 200, 200], 3, (body) => moveBody(body, -3)),
+    logs3: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 4, "brown", "logs3", "rect", 2)([0, 250, 500], [160, 160, 160], 2, (body) => moveBody(body, 2)),
+    logs4: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 2, "brown", "logs4", "rect", -1.8)([0, 160, 320, 480], [120, 120, 120, 120], 3, (body) => moveBody(body, -1.8)),
+    wins: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 2, "cyan", "win", "rect", 0)([70, 270, 470], [80, 80, 80], 2, (body) => moveBody(body, 2)),
     gameOver: false
   }
 
@@ -207,7 +217,8 @@ function main() {
   const tick = (curState: State , elapsed: number): State =>
   {
     //Combine all non-player bodies
-    const allBodies = curState.cars.concat(curState.karts).concat(curState.vans).concat(curState.trucks)
+    const allBodies = curState.cars.concat(curState.karts).concat(curState.vans).concat(curState.trucks).concat(curState.logs1).
+                      concat(curState.logs2).concat(curState.logs3).concat(curState.logs4).concat(curState.wins);
 
     // Returns state
     return {...curState,
@@ -215,7 +226,11 @@ function main() {
       karts: curState.karts.map(kart => moveBody(kart)),
       vans: curState.vans.map(vans => moveBody(vans)),
       trucks: curState.trucks.map(trucks => moveBody(trucks)),
-      //frog: curState.frog,
+      logs1: curState.logs1.map(log => moveBody(log)),
+      logs2: curState.logs2.map(log => moveBody(log)),
+      logs3: curState.logs3.map(log => moveBody(log)),
+      logs4: curState.logs4.map(log => moveBody(log)),
+      wins: curState.wins.map(win => moveBody(win)),
       frog: collisionsHandler(allBodies, curState.frog),
       time: elapsed
     };
@@ -302,23 +317,21 @@ function main() {
    * @param curBody The current body being managed
    * @returns 
    */
-  const moveBody = (curBody: Body) => <Body>
+  const moveBody = (curBody: Body, speed: number = curBody.speed) => <Body>
   {
       ...curBody,
     // This 'if statement' is to give the objects the ability to warp when out of bounds
-    pos_x: curBody.speed >= 0 ? // For objects moving left to right
-      curBody.pos_x + curBody.speed > Constants.CanvasSize  ? 
+    pos_x: speed >= 0 ? // For objects moving left to right
+      curBody.pos_x + speed > Constants.CanvasSize  ? 
       0 - ((curBody.size * curBody.sizeWidthMulti) - Constants.enemySizeMargins)
       : 
-      curBody.pos_x + curBody.speed 
+      curBody.pos_x + speed
     :
-      curBody.size ?  // For objects moving right to left
-        curBody.pos_x + curBody.speed < 0 - ((curBody.size * curBody.sizeWidthMulti) - Constants.enemySizeMargins) ?
-          Constants.CanvasSize
+      // For objects moving right to left
+      curBody.pos_x + speed < 0 - ((curBody.size * curBody.sizeWidthMulti) - Constants.enemySizeMargins) ?
+        Constants.CanvasSize
         :
-        curBody.pos_x + curBody.speed
-      :
-      0
+        curBody.pos_x + speed
   }
 
   /**
@@ -420,6 +433,11 @@ function main() {
     theState.karts.forEach((body => updateBodyView(body, svg)))
     theState.vans.forEach((body => updateBodyView(body, svg)))
     theState.trucks.forEach((body => updateBodyView(body, svg)))
+    theState.logs1.forEach((body) => updateBodyView(body, svg))
+    theState.logs2.forEach((body) => updateBodyView(body, svg))
+    theState.logs3.forEach((body) => updateBodyView(body, svg))
+    theState.logs4.forEach((body) => updateBodyView(body, svg))
+    theState.wins.forEach((body) => updateBodyView(body, svg))
 
   }
 
@@ -433,14 +451,19 @@ if (typeof window !== "undefined") {
 }
 
 /** Latest progress
- *  + COLLISION DONE HOLY SHIT
- *  + Next is make their logs and their respective function
+ *  + Logs lanes are made!
+ *  + Next is to make sure the player is visibly on top of the logs lol
  * 
  *  Trello but not really
- *  + Make the log lanes
+ *  + Make river
+ *  + Code the wins/goals
  *  + Give independent bodies the ability to hide and unhide on command
+ *  + Make turtles
+ *  + Make crocodiles
+ *  + Round system
  *  + Life system
  *  + Game Over system
+ *  + Restart system
  * 
  *  Done:
  *  + Implement engine
@@ -451,6 +474,7 @@ if (typeof window !== "undefined") {
  *  + Warp NPCs
  *  + Make the car lanes
  *  + Collision system
+ *  + Make the log lanes
  * 
  *  Note:
  *  1. Crocodile: can stand on its body, but not the head
