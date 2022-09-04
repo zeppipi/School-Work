@@ -36,7 +36,7 @@ function main() {
     playerRadius: 18,               // Store the radius of the player (make sure this syncs with whats in the html)
     enemyHeights: 40,               // Store the height of every non-player objects
     enemySizeMargins: 2,            // Store the margins of every non-player objects
-    riverStart: 320                 // Store the y-location of where the river section starts
+    riverStart: 280                 // Store the y-location of where the river section starts
     // carSize: [38, 78],              // Store car size [0] for height and [1] for width
     // kartsSize: [38, 48],            // Same for karts
     // vansSize: [38, 93],             // Same for vans
@@ -65,6 +65,7 @@ function main() {
     size: number,
     sizeWidthMulti: number,
     color?: string,
+    showRound: number,
     collidingEvent: (_: Body) => Body
   }
 
@@ -84,6 +85,7 @@ function main() {
       speed: 0,
       size: 0,
       sizeWidthMulti: 0,
+      showRound: 0,
       collidingEvent: Identity
     };
   }
@@ -96,10 +98,10 @@ function main() {
    */
   const createEnemies = 
     (size: number, sizeWidthMulti: number, color: String, enemyID: String, shapeID: String, movementSpeed: number) =>
-    (positionsX: Readonly<number[]>, positionsY: Readonly<number>[], counter: number, collidingFunction: (_:Body) => Body, enemies: Body[] = []): Body[] => 
+    (positionsX: Readonly<number[]>, positionsY: Readonly<number>[], showRounds: Readonly<number>[], counter: number, collidingFunction: (_:Body) => Body, enemies: Body[] = []): Body[] =>
       {
         return counter > -1 ? 
-          createEnemies(size, sizeWidthMulti, color, enemyID, shapeID, movementSpeed)(positionsX, positionsY, counter - 1, collidingFunction, [createEnemy(positionsX[counter], positionsY[counter], movementSpeed, enemyID, shapeID)(color, size, sizeWidthMulti)(collidingFunction)].concat(enemies))
+          createEnemies(size, sizeWidthMulti, color, enemyID, shapeID, movementSpeed)(positionsX, positionsY, showRounds, counter - 1, collidingFunction, [createEnemy(positionsX[counter], positionsY[counter], showRounds[counter], movementSpeed, enemyID, shapeID)(color, size, sizeWidthMulti)(collidingFunction)].concat(enemies))
         :
           enemies
       }
@@ -109,7 +111,7 @@ function main() {
   * 
   * @returns A single body
   */
-  const createEnemy = (xPosition: number, yPosition: number, movementSpeed: number, enemyID: String, shapeID: String) => 
+  const createEnemy = (xPosition: number, yPosition: number, showRound: number, movementSpeed: number, enemyID: String, shapeID: String) => 
                       (color: String, size: number, sizeWidthMulti: number) => (collidingFunction: (_:Body) => Body) =>
     <Body>{
       //Set the body object
@@ -120,10 +122,26 @@ function main() {
       speed: movementSpeed,
       size: size,
       sizeWidthMulti: sizeWidthMulti,
+      showRound: showRound,
       color: color,
       collidingEvent: collidingFunction
     }
 
+  /**
+   * A function that calculates if a body should exist in the current round
+   * 
+   * @param theState The state to check what round is it currently
+   * @param curBody  The body to check
+   * @returns True for they should and false they shouldn't
+   */
+     const existOnRound = (theState: State, curBody: Body): boolean =>
+     {
+       const currentRound = theState.rounds;
+       const bodyRound = curBody.showRound;
+   
+       return bodyRound <= currentRound;
+     }
+  
   /**
    * A function to reset a body to their spawn position
    * 
@@ -135,6 +153,18 @@ function main() {
    ...player,
    pos_x: Constants.playerSpawnPoint[0],
    pos_y: Constants.playerSpawnPoint[1]
+  }
+
+  /**
+   * A function that 'destroys' the body it touches
+   * 
+   * @param otherBody This function is specifically for non-players
+   * @returns 
+   */
+  const Destroy = (otherBody: Body) => <Body>
+  {
+    ...otherBody,
+    pos_y: otherBody.pos_y * -1
   }
 
   /**
@@ -151,7 +181,7 @@ function main() {
   /**
    * An empty body for when something went terrible wrong
    */
-  const emptyBody = createEnemy(0,0,0, "Wrong", "rect")("white", 300, 1)(Identity)
+  const emptyBody = createEnemy(0,0,0,0, "Wrong", "rect")("white", 300, 1)(Identity)
   
   /**
    * The game state type, taken from the Astreoid FRP
@@ -169,6 +199,7 @@ function main() {
     logs4: ReadonlyArray<Body>,
     wins: ReadonlyArray<Body>,
     snake: ReadonlyArray<Body>,
+    rounds: number,
     gameOver:boolean
   }>
 
@@ -179,16 +210,17 @@ function main() {
   {
     time: 0,
     frog: createPlayer(),
-    cars: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 2, "orange", "car", "rect", 2.5)([200, 400, 600], [440, 440, 440], 2, Reset),
-    karts: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 1.3, "lightgreen", "karts", "rect", -4)([100, 250, 450, 600], [400, 400, 400, 400], 3, Reset),
-    vans: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 2.3, "white", "vans", "rect", 2)([100, 300, 500], [360, 360, 360], 2, Reset),
-    trucks: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 4, "red", "trucks", "rect", -1.8)([0, 250, 500], [320, 320, 320], 2, Reset),
-    logs1: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 4, "brown", "logs1", "rect", 2)([0, 250, 500], [240, 240, 240], 2, (body) => moveBody(body, 2)),
-    logs2: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 2, "brown", "logs2", "rect", -3)([0, 160, 320, 480], [200, 200, 200, 200], 3, (body) => moveBody(body, -3)),
-    logs3: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 4, "brown", "logs3", "rect", 2)([0, 250, 500], [160, 160, 160], 2, (body) => moveBody(body, 2)),
-    logs4: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 2, "brown", "logs4", "rect", -1.8)([0, 160, 320, 480], [120, 120, 120, 120], 3, (body) => moveBody(body, -1.8)),
-    wins: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 2, "cyan", "win", "rect", 0)([70, 270, 470], [80, 80, 80], 2, (body) => moveBody(body, 0)),
-    snake: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins - 30, 10, "lightgreen", "snake", "rect", 0.8)([0], [295], 0, Reset),
+    cars: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 2, "orange", "car", "rect", 2.5)([200, 400, 600], [440, 440, 440], [0,0,0], 2, Reset),
+    karts: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 1.3, "lightgreen", "karts", "rect", -4)([100, 250, 450, 600], [400, 400, 400, 400], [0,0,0,0], 3, Reset),
+    vans: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 2.3, "white", "vans", "rect", 2)([100, 300, 500], [360, 360, 360], [0,0,0], 2, Reset),
+    trucks: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 4, "red", "trucks", "rect", -1.8)([0, 250, 500], [320, 320, 320], [0,0,0], 2, Reset),
+    logs1: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 4, "brown", "logs1", "rect", 2)([0, 250, 500], [240, 240, 240], [0,0,0], 2, (body) => moveBody(body, 2)),
+    logs2: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 2, "brown", "logs2", "rect", -3)([0, 160, 320, 480], [200, 200, 200, 200], [0,0,0,0], 3, (body) => moveBody(body, -3)),
+    logs3: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 4, "brown", "logs3", "rect", 2)([0, 250, 500], [160, 160, 160], [0,0,0], 2, (body) => moveBody(body, 2)),
+    logs4: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 2, "brown", "logs4", "rect", -1.8)([0, 160, 320, 480], [120, 120, 120, 120], [0,0,0,0], 3, (body) => moveBody(body, -1.8)),
+    wins: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 2, "cyan", "win", "rect", 0)([70, 270, 470], [80, 80, 80], [0,0,0], 2, (body) => moveBody(body, 0)),
+    snake: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins - 30, 10, "lightgreen", "snake", "rect", 0.8)([0], [295], [0], 0, Reset),
+    rounds: 1,
     gameOver: false
   }
 
@@ -220,10 +252,11 @@ function main() {
   {
     //Combine all non-player bodies
     const allBodies = curState.cars.concat(curState.karts).concat(curState.vans).concat(curState.trucks).concat(curState.logs1).
-                      concat(curState.logs2).concat(curState.logs3).concat(curState.logs4).concat(curState.wins).concat(curState.snake);
+                      concat(curState.logs2).concat(curState.logs3).concat(curState.logs4).concat(curState.wins).concat(curState.snake).
+                      concat(curState.wins);
 
-    console.log(curState.snake);
-
+    console.log(curState.wins.map(win => isColliding(win, curState.frog, curState) ? win.showRound : null));
+    
     // Returns state
     return {...curState,
       cars: curState.cars.map(car => moveBody(car)),
@@ -234,9 +267,9 @@ function main() {
       logs2: curState.logs2.map(log => moveBody(log)),
       logs3: curState.logs3.map(log => moveBody(log)),
       logs4: curState.logs4.map(log => moveBody(log)),
-      wins: curState.wins.map(win => moveBody(win)),
+      wins: curState.wins.map(win => isColliding(win, curState.frog, curState) ? Destroy(win) : win),
       snake: curState.snake.map(snake => moveBody(snake)),
-      frog: collisionsHandler(allBodies, curState.frog),
+      frog: collisionsHandler(allBodies, curState.frog, curState),
       time: elapsed
     };
   }
@@ -251,11 +284,11 @@ function main() {
    * @param singleBody the single body to check
    * @param eventFunction what event should happen when a collision happens
    */
-  const collisionsHandler = (bodyList: Body[], singleBody: Body): Body =>
+  const collisionsHandler = (bodyList: Body[], singleBody: Body, theState: State): Body =>
   {
     const auxCollisionFunc = (bodyListAux: Body[], singleBodyAux: Body): Body =>
     {
-      const collidedBodies = bodyListAux.map((currentBodyList) => isColliding(currentBodyList, singleBodyAux) ? currentBodyList : null)
+      const collidedBodies = bodyListAux.map((currentBodyList) => isColliding(currentBodyList, singleBodyAux, theState) ? currentBodyList : null)
       const filteredCollidedBodies = collidedBodies.filter((current) => current ? current : null)
 
       //In the list of collided bodies, only the first one will be needed to know if the player has collided
@@ -288,7 +321,7 @@ function main() {
    */
   const riverChecker = (curBody: Body): boolean =>
   {
-    return curBody.pos_y > Constants.riverStart;
+    return curBody.pos_y < Constants.riverStart;
   }
 
   /**
@@ -298,11 +331,11 @@ function main() {
    * @param collidee The victim (player here)
    * @returns True for they did and false for nah
    */
-  const isColliding = (collider: Body, collidee: Body): boolean =>
+  const isColliding = (collider: Body, collidee: Body, theState: State): boolean =>
   {
     return collidee.pos_x < collider.pos_x || collidee.pos_x > (collider.pos_x + ((collider.size * collider.sizeWidthMulti) - Constants.enemySizeMargins)) 
             ? false : collidee.pos_y < collider.pos_y || collidee.pos_y > (collider.pos_y + (collider.size - Constants.enemySizeMargins)) 
-            ? false : true
+            ? false : true && existOnRound(theState, collider)
 
   }
 
@@ -401,6 +434,9 @@ function main() {
    */
   function updateView(theState: State)
   {
+    //Update UI elements
+    rounds.textContent = String("Rounds: " + theState.rounds);
+    
     const
       //Update all bodies on screen
       updateBodyView = (body: Body, canvas: HTMLElement) => 
@@ -461,19 +497,23 @@ function main() {
       }
     
     // Update all bodies 
-    theState.cars.forEach((body => updateBodyView(body, svg)))
-    theState.karts.forEach((body => updateBodyView(body, svg)))
-    theState.vans.forEach((body => updateBodyView(body, svg)))
-    theState.trucks.forEach((body => updateBodyView(body, svg)))
-    theState.logs1.forEach((body) => updateBodyView(body, svg))
-    theState.logs2.forEach((body) => updateBodyView(body, svg))
-    theState.logs3.forEach((body) => updateBodyView(body, svg))
-    theState.logs4.forEach((body) => updateBodyView(body, svg))
-    theState.wins.forEach((body) => updateBodyView(body, svg))
-    theState.snake.forEach((body) => updateBodyView(body, svg))
-    updateBodyView(theState.frog, svg)
+    // Check 'existRounds' here
+    theState.cars.forEach((body) => existOnRound(theState, body) ? updateBodyView(body, svg) : 0)
+    theState.karts.forEach((body) => existOnRound(theState, body) ? updateBodyView(body, svg) : 0)
+    theState.vans.forEach((body) => existOnRound(theState, body) ? updateBodyView(body, svg) : 0)
+    theState.trucks.forEach((body) => existOnRound(theState, body) ? updateBodyView(body, svg) : 0)
+    theState.logs1.forEach((body) => existOnRound(theState, body) ? updateBodyView(body, svg) : 0)
+    theState.logs2.forEach((body) => existOnRound(theState, body) ? updateBodyView(body, svg) : 0)
+    theState.logs3.forEach((body) => existOnRound(theState, body) ? updateBodyView(body, svg) : 0)
+    theState.logs4.forEach((body) => existOnRound(theState, body) ? updateBodyView(body, svg) : 0)
+    theState.wins.forEach((body) => existOnRound(theState, body) ? updateBodyView(body, svg) : 0)
+    theState.snake.forEach((body) => existOnRound(theState, body) ? updateBodyView(body, svg) : 0)
+    existOnRound(theState, theState.frog) ? updateBodyView(theState.frog, svg) : 0
 
   }
+
+  //UI Elements here
+  const rounds = document.getElementById("rounds")!;
 
 }
 
@@ -485,12 +525,11 @@ if (typeof window !== "undefined") {
 }
 
 /** Latest progress
- *  + Making the truth table for the river (line 266)
+ *  + A destroy function is made... doesn't work
+ *  + destroy now works... kind of, it just puts the destroyed object to -1 y
  * 
  *  Trello but not really
- *  + Make river
  *  + Code the wins/goals
- *  + Give independent bodies the ability to hide and unhide on command
  *  + Make turtles
  *  + Make crocodiles
  *  + Round system
@@ -508,6 +547,8 @@ if (typeof window !== "undefined") {
  *  + Make the car lanes
  *  + Collision system
  *  + Make the log lanes
+ *  + Make river
+ *  + Give independent bodies the ability to hide and unhide on command  
  * 
  *  Note:
  *  1. Crocodile: can stand on its body, but not the head
@@ -540,5 +581,6 @@ if (typeof window !== "undefined") {
  *  The collision system runs in the 'tick' function where in every tick, the player will check if they are colliding
  *  with all of the non-player bodies (the list of all non-player bodies are made by simply concatonating all of the
  *  distinct list of bodies). And when the player is colliding with one of them, it will call the function that is
- *  being held by that body, and throw itself into it. 
+ *  being held by that body, and throw itself into it. The reason why I make these bodies hold a function, is to make things more
+ *  modular, the player hitting a log will do different things to when it hits a car.
  */
