@@ -157,15 +157,22 @@ function main() {
   }
 
   /**
-   * A function that 'destroys' the body it touches
+   * A function that 'destroys' 'otherBody' and resets the 'player'
    * 
-   * @param otherBody This function is specifically for non-players
+   * @param theState This function is specifically for non-players
    * @returns 
    */
-  const Destroy = (otherBody: Body) => <Body>
+  const Destroy = (player: State, otherBody: Body): Body =>
   {
-    ...otherBody,
-    pos_y: otherBody.pos_y * -1
+    <State> {
+      ...player,
+      frog: Reset(player.frog)
+    }
+
+    return <Body> {
+      ...otherBody,
+      pos_y: otherBody.pos_y * -1
+    }
   }
 
   /**
@@ -289,7 +296,7 @@ function main() {
                       concat(curState.logs2).concat(curState.logs3).concat(curState.logs4).concat(curState.wins).concat(curState.snake).
                       concat(curState.wins).concat(curState.riverWins);
     
-    // Returns state
+    // Check if round should continue or reset to a new one
     return roundChecker(curState) ? 
     newRound(curState)
     :
@@ -302,7 +309,7 @@ function main() {
       logs2: curState.logs2.map(log => moveBody(log)),
       logs3: curState.logs3.map(log => moveBody(log)),
       logs4: curState.logs4.map(log => moveBody(log)),
-      wins: curState.wins.map(win => isColliding(win, curState.frog, curState) ? Destroy(win) : win),
+      wins: curState.wins.map(win => isColliding(win, curState.frog, curState) ? Destroy(curState, win) : win),
       snake: curState.snake.map(snake => moveBody(snake)),
       frog: collisionsHandler(allBodies, curState.frog, curState),
       time: elapsed
@@ -561,11 +568,13 @@ if (typeof window !== "undefined") {
 }
 
 /** Latest progress
- *  + The game now has the concept of rounds and game gets progressively harder as it goes on
+ *  + The game now has the concept of rounds and game gets progressively harder as it goes
+ *  + Biggest issue is on 'Destroy'
  * 
  *  Trello but not really
- *  + Refactor collision events to take in a state instead of a body
+ *  + Code the wins/goals
  *  + Make turtles
+ *  + Make bodies able to hide when a certain round is reached
  *  + Make crocodiles
  *  + Life system
  *  + Game Over system
@@ -583,7 +592,6 @@ if (typeof window !== "undefined") {
  *  + Make the log lanes
  *  + Make river
  *  + Give independent bodies the ability to hide and unhide on command  
- *  + Code the wins/goals
  *  + Round system
  * 
  *  Note:
