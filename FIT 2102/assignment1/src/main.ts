@@ -36,7 +36,8 @@ function main() {
     playerRadius: 18,               // Store the radius of the player (make sure this syncs with whats in the html)
     enemyHeights: 40,               // Store the height of every non-player objects
     enemySizeMargins: 2,            // Store the margins of every non-player objects
-    riverStart: 280                 // Store the y-location of where the river section starts
+    riverStart: 280,                // Store the y-location of where the river section starts
+    riverEnd: 120                   // Store the y-location of where the river section ends
     // carSize: [38, 78],              // Store car size [0] for height and [1] for width
     // kartsSize: [38, 48],            // Same for karts
     // vansSize: [38, 93],             // Same for vans
@@ -179,6 +180,37 @@ function main() {
   }
 
   /**
+   * A function that checks if the round has ended or not
+   * 
+   * @param theState The state to check if we should go to the next round
+   */
+  const roundChecker = (theState: State): boolean =>
+  {
+    //True for the goal is gone, false for the goal is still there
+    const goalsCondition = theState.wins.map((curBody) => curBody.pos_y < 0 ? 1 : 0)
+    const roundDone = goalsCondition.reduce((a:number, b:number):number => a + b, 0)
+
+    return roundDone >= 3 ? true : false
+  }
+
+  /**
+   * A function that resets the scene and adds the round by one
+   * 
+   * @param theState The state to send to the next round
+   * @returns Edits to "theState"
+   */
+  const newRound = (theState: State) => <State>
+  {
+    ...theState,
+    rounds: theState.rounds + 1,
+    frog: Reset(theState.frog),
+    wins: theState.wins.map((curBody) => <Body>{
+       ...curBody,
+       pos_y: curBody.pos_y * -1
+    })
+  }
+
+  /**
    * An empty body for when something went terrible wrong
    */
   const emptyBody = createEnemy(0,0,0,0, "Wrong", "rect")("white", 300, 1)(Identity)
@@ -198,6 +230,7 @@ function main() {
     logs3: ReadonlyArray<Body>,
     logs4: ReadonlyArray<Body>,
     wins: ReadonlyArray<Body>,
+    riverWins: ReadonlyArray<Body>,
     snake: ReadonlyArray<Body>,
     rounds: number,
     gameOver:boolean
@@ -210,16 +243,17 @@ function main() {
   {
     time: 0,
     frog: createPlayer(),
-    cars: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 2, "orange", "car", "rect", 2.5)([200, 400, 600], [440, 440, 440], [0,0,0], 2, Reset),
-    karts: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 1.3, "lightgreen", "karts", "rect", -4)([100, 250, 450, 600], [400, 400, 400, 400], [0,0,0,0], 3, Reset),
-    vans: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 2.3, "white", "vans", "rect", 2)([100, 300, 500], [360, 360, 360], [0,0,0], 2, Reset),
-    trucks: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 4, "red", "trucks", "rect", -1.8)([0, 250, 500], [320, 320, 320], [0,0,0], 2, Reset),
+    cars: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 2, "orange", "car", "rect", 2.5)([200, 400, 600], [440, 440, 440], [0,2,0], 2, Reset),
+    karts: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 1.3, "lightgreen", "karts", "rect", -4)([100, 250, 450, 600], [400, 400, 400, 400], [0,3,3,2], 3, Reset),
+    vans: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 2.3, "white", "vans", "rect", 2)([100, 300, 500], [360, 360, 360], [0,2,0], 2, Reset),
+    trucks: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 4, "red", "trucks", "rect", -1.8)([0, 250, 500], [320, 320, 320], [0,2,0], 2, Reset),
     logs1: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 4, "brown", "logs1", "rect", 2)([0, 250, 500], [240, 240, 240], [0,0,0], 2, (body) => moveBody(body, 2)),
     logs2: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 2, "brown", "logs2", "rect", -3)([0, 160, 320, 480], [200, 200, 200, 200], [0,0,0,0], 3, (body) => moveBody(body, -3)),
     logs3: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 4, "brown", "logs3", "rect", 2)([0, 250, 500], [160, 160, 160], [0,0,0], 2, (body) => moveBody(body, 2)),
     logs4: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 2, "brown", "logs4", "rect", -1.8)([0, 160, 320, 480], [120, 120, 120, 120], [0,0,0,0], 3, (body) => moveBody(body, -1.8)),
     wins: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 2, "cyan", "win", "rect", 0)([70, 270, 470], [80, 80, 80], [0,0,0], 2, (body) => moveBody(body, 0)),
-    snake: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins - 30, 10, "lightgreen", "snake", "rect", 0.8)([0], [295], [0], 0, Reset),
+    riverWins: createEnemies(Constants.enemyHeights, 2, "blue", "riverWin", "rect", 0)([0, 146, 190, 346, 390, 546], [79.5, 79.5, 79.5, 79.5, 79.5, 79.5],[0,0,0,0,0,0], 5, Reset),
+    snake: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins - 30, 10, "lightgreen", "snake", "rect", 0.8)([0], [295], [3], 0, Reset),
     rounds: 1,
     gameOver: false
   }
@@ -253,12 +287,13 @@ function main() {
     //Combine all non-player bodies
     const allBodies = curState.cars.concat(curState.karts).concat(curState.vans).concat(curState.trucks).concat(curState.logs1).
                       concat(curState.logs2).concat(curState.logs3).concat(curState.logs4).concat(curState.wins).concat(curState.snake).
-                      concat(curState.wins);
-
-    console.log(curState.wins.map(win => isColliding(win, curState.frog, curState) ? win.showRound : null));
+                      concat(curState.wins).concat(curState.riverWins);
     
     // Returns state
-    return {...curState,
+    return roundChecker(curState) ? 
+    newRound(curState)
+    :
+    {...curState,
       cars: curState.cars.map(car => moveBody(car)),
       karts: curState.karts.map(kart => moveBody(kart)),
       vans: curState.vans.map(vans => moveBody(vans)),
@@ -321,7 +356,7 @@ function main() {
    */
   const riverChecker = (curBody: Body): boolean =>
   {
-    return curBody.pos_y < Constants.riverStart;
+    return curBody.pos_y < Constants.riverStart ? curBody.pos_y > Constants.riverEnd ? true : false : false;
   }
 
   /**
@@ -507,6 +542,7 @@ function main() {
     theState.logs3.forEach((body) => existOnRound(theState, body) ? updateBodyView(body, svg) : 0)
     theState.logs4.forEach((body) => existOnRound(theState, body) ? updateBodyView(body, svg) : 0)
     theState.wins.forEach((body) => existOnRound(theState, body) ? updateBodyView(body, svg) : 0)
+    theState.riverWins.forEach((body) => existOnRound(theState, body) ? updateBodyView(body, svg) : 0)
     theState.snake.forEach((body) => existOnRound(theState, body) ? updateBodyView(body, svg) : 0)
     existOnRound(theState, theState.frog) ? updateBodyView(theState.frog, svg) : 0
 
@@ -525,14 +561,12 @@ if (typeof window !== "undefined") {
 }
 
 /** Latest progress
- *  + A destroy function is made... doesn't work
- *  + destroy now works... kind of, it just puts the destroyed object to -1 y
+ *  + The game now has the concept of rounds and game gets progressively harder as it goes on
  * 
  *  Trello but not really
- *  + Code the wins/goals
+ *  + Refactor collision events to take in a state instead of a body
  *  + Make turtles
  *  + Make crocodiles
- *  + Round system
  *  + Life system
  *  + Game Over system
  *  + Restart system
@@ -549,6 +583,8 @@ if (typeof window !== "undefined") {
  *  + Make the log lanes
  *  + Make river
  *  + Give independent bodies the ability to hide and unhide on command  
+ *  + Code the wins/goals
+ *  + Round system
  * 
  *  Note:
  *  1. Crocodile: can stand on its body, but not the head
