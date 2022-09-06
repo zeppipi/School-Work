@@ -25,6 +25,7 @@ function main() {
   // Store the possible game actions
   class Move {constructor(public readonly x_move: number, readonly y_move: number) {} }  // A move state
   class Tick {constructor(public readonly elapsed: number) {} }                          // A clock
+  class FullReset {constructor () {}}                                                    // A full restart
   
   // Store constants
   const Constants = 
@@ -40,10 +41,10 @@ function main() {
     enemySizeMargins: 2,            // Store the margins of every non-player objects
     riverStart: 280,                // Store the y-location of where the river section starts
     riverEnd: 120                   // Store the y-location of where the river section ends
-    // carSize: [38, 78],              // Store car size [0] for height and [1] for width
-    // kartsSize: [38, 48],            // Same for karts
-    // vansSize: [38, 93],             // Same for vans
-    // truckSize: [38, 158]            // Same for trucks
+    // carSize: [38, 78],           // Store car size [0] for height and [1] for width
+    // kartsSize: [38, 48],         // Same for karts
+    // vansSize: [38, 93],          // Same for vans
+    // truckSize: [38, 158]         // Same for trucks
   } as const;
   
   /**
@@ -54,6 +55,7 @@ function main() {
 
   /**
    * All possible info of any square objects
+   * Code derived from the Astreoid FRP
    */
   type Rectangle = Readonly<{pos_x: number, pos_y: number}>
 
@@ -98,8 +100,7 @@ function main() {
   }
 
   /**
-   * A function that makes several enemies at once, made so that 'createEnemy' don't need to be called
-   * so many times
+   * A function that makes several enemies at once, made so that 'createEnemy' don't need to be called so many times
    * 
    * @returns A list of bodies
    */
@@ -153,7 +154,6 @@ function main() {
           currentRound >= bodyHideRound ? false : bodyShowRound <= currentRound
         :
           bodyShowRound <= currentRound
-       //return bodyRound <= currentRound;
      }
   
   /**
@@ -177,7 +177,10 @@ function main() {
    */
   const harmfulReset = (player: Body) => <Body>
   {
-    ...player
+    ...player,
+    pos_x: Constants.playerSpawnPoint[0],
+    pos_y: Constants.playerSpawnPoint[1],
+    lives: player.lives - 1
   }
 
   /**
@@ -216,7 +219,7 @@ function main() {
     const goalsCondition = theState.wins.map((curBody) => curBody.pos_y < 0 ? 1 : 0)
     const roundDone = goalsCondition.reduce((a:number, b:number):number => a + b, 0)
 
-    return roundDone >= 3 ? true : false
+    return roundDone >= theState.wins.length ? true : false
   }
 
   /**
@@ -250,13 +253,21 @@ function main() {
 
   /**
    * A function that executes all the nessecary events for a game over
+   * Giving the player a set position will cause it to get stuck
    * 
    * @param theState 
    * @returns 
    */
   const gameOver = (theState: State) => <State>
   {
-    ...theState
+    ...theState,
+    frog:
+      {
+        ...theState.frog,
+        pos_x: Constants.playerSpawnPoint[0],
+        pos_y: Constants.playerSpawnPoint[1]
+      },
+    gameOver: true
   }
 
   /**
@@ -298,31 +309,46 @@ function main() {
   {
     time: 0,
     frog: createPlayer(),
-    cars: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 2, "orange", "car", "rect", 2.5)([200, 400, 600], [440, 440, 440], [0,2,0], [null, null, null], 2, Reset),
-    karts: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 1.3, "lightgreen", "karts", "rect", -4)([100, 250, 450, 600], [400, 400, 400, 400], [0,3,3,2], [null, null, null, null], 3, Reset),
-    vans: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 2.3, "white", "vans", "rect", 2)([100, 300, 500], [360, 360, 360], [0,2,0], [null, null, null], 2, Reset),
-    trucks: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 4, "red", "trucks", "rect", -1.8)([0, 250, 500], [320, 320, 320], [0,2,0], [null, null, null], 2, Reset),
+    cars: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 2, "orange", "car", "rect", 2.5)([200, 400, 600], [440, 440, 440], [0,2,0], [null, null, null], 2, harmfulReset),
+    karts: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 1.3, "lightgreen", "karts", "rect", -4)([100, 250, 450, 600], [400, 400, 400, 400], [0,3,3,2], [null, null, null, null], 3, harmfulReset),
+    vans: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 2.3, "white", "vans", "rect", 2)([100, 300, 500], [360, 360, 360], [0,2,0], [null, null, null], 2, harmfulReset),
+    trucks: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 4, "red", "trucks", "rect", -1.8)([0, 250, 500], [320, 320, 320], [0,2,0], [null, null, null], 2, harmfulReset),
     logs1: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 4, "brown", "logs1", "rect", 2)([0, 250, 500], [240, 240, 240], [0,0,0], [3, 2, 4], 2, (body) => moveBody(body, 2)),
     logs2: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 2, "brown", "logs2", "rect", -3)([0, 160, 320, 480], [200, 200, 200, 200], [0,0,0,0], [4, 2, 3, 4], 3, (body) => moveBody(body, -3)),
     logs3: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 4, "brown", "logs3", "rect", 2)([0, 250, 500], [160, 160, 160], [0,0,0], [2, 4, 2], 2, (body) => moveBody(body, 2)),
     logs4: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 2, "brown", "logs4", "rect", -1.8)([0, 160, 320, 480], [120, 120, 120, 120], [0,0,0,0], [3, 4, 4, 2], 3, (body) => moveBody(body, -1.8)),
     wins: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 2, "cyan", "win", "rect", 0)([70, 270, 470], [80, 80, 80], [0,0,0], [null, null, null], 2, Reset),
-    riverWins: createEnemies(Constants.enemyHeights, 2, "blue", "riverWin", "rect", 0)([0, 146, 190, 346, 390, 546], [79.5, 79.5, 79.5, 79.5, 79.5, 79.5],[0,0,0,0,0,0], [null, null, null, null, null, null], 5, Reset),
-    snake: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins - 30, 10, "lightgreen", "snake", "rect", 0.8)([0], [295], [3], [null], 0, Reset),
+    riverWins: createEnemies(Constants.enemyHeights, 2, "blue", "riverWin", "rect", 0)([0, 146, 190, 346, 390, 546], [79.5, 79.5, 79.5, 79.5, 79.5, 79.5],[0,0,0,0,0,0], [null, null, null, null, null, null], 5, harmfulReset),
+    snake: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins - 30, 10, "lightgreen", "snake", "rect", 0.8)([0], [295], [3], [null], 0, harmfulReset),
     crocodiles1: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 4, "darkbrown", "crocodiles1", "rect", 2)([0, 500], [240, 240], [3, 4], [null, null], 1, (body) => moveBody(body, 2)),
-    crocodiles1Head: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 1, "darkred", "crocodiles1heads", "rect", 2)([120, 620], [240, 240], [3, 4], [null, null], 1, Reset),
+    crocodiles1Head: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 1, "darkred", "crocodiles1heads", "rect", 2)([120, 620], [240, 240], [3, 4], [null, null], 1, harmfulReset),
     crocodiles2: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 4, "darkbrown", "crocodiles1", "rect", 2)([250], [160], [4], [null], 0, (body) => moveBody(body, 2)),
-    crocodiles2Head: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 1, "darkred", "crocodiles1heads", "rect", 2)([370], [160], [4], [null], 0, Reset),
+    crocodiles2Head: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 1, "darkred", "crocodiles1heads", "rect", 2)([370], [160], [4], [null], 0, harmfulReset),
     turtles1: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 2, "lightgreen", "turtles1", "rect", -3)([0, 160, 320, 480], [200, 200, 200, 200], [4, 2, 3, 4], [null, null, null, null], 3, (body) => moveBody(body, -3)),
     turtles2: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 2, "lightgreen", "turtles2", "rect", -1.8)([0, 160, 320, 480], [120, 120, 120, 120], [3, 4, 4, 2], [null, null, null, null], 3, (body) => moveBody(body, -1.8)),
-    rounds: 4,
+    rounds: 1,
     gameOver: false
   }
 
   /**
    * What happens on each state in relation to the events
    */
-  const currentState = (curState: State, curEvent: Move | Tick ) =>
+  const currentState = (curState: State, curEvent: Move | Tick | FullReset) =>
+    // For when we are in a game over
+    curEvent instanceof FullReset ?
+    {
+      ...curState,
+      frog:
+        {
+          ...curState.frog,
+          pos_x: Constants.playerSpawnPoint[0],
+          pos_y: Constants.playerSpawnPoint[1],
+          lives: 3
+        },
+      rounds: 1,
+      gameOver: false
+    }
+    :
     // For when move happens
     curEvent instanceof Move ?
       {...curState,
@@ -350,8 +376,6 @@ function main() {
                       concat(curState.logs2).concat(curState.logs3).concat(curState.logs4).concat(curState.wins).concat(curState.snake).
                       concat(curState.wins).concat(curState.riverWins).concat(curState.crocodiles1).concat(curState.crocodiles1Head).
                       concat(curState.crocodiles2).concat(curState.crocodiles2Head).concat(curState.turtles1).concat(curState.turtles2);
-    
-    console.log(curState.time)
     
     //Check if the player is still alive
     return playerCheck(curState.frog) ?
@@ -386,6 +410,7 @@ function main() {
   /**
    * Checks collisions between a single body with a list of bodies
    * If true, play the given function, if false, body is left alone
+   * 
    * Also calls 'riverChecker' to check if the player is in the river section,
    * in which the collision behaviours work a little differently
    * 
@@ -415,8 +440,6 @@ function main() {
           filteredCollidedBodies[0] ? filteredCollidedBodies[0].collidingEvent(singleBodyAux) : singleBodyAux  //Not in river and colliding with a body
           : 
           singleBodyAux   //Not in river and not colliding with a body
-      
-      //return filteredCollidedBodies[0]? filteredCollidedBodies[0].collidingEvent(singleBodyAux) : singleBodyAux;
       
     }
     return auxCollisionFunc(bodyList, singleBody)
@@ -448,11 +471,11 @@ function main() {
 
   }
 
-  //Player Move logic starts here
+  //Fully player related logic starts here
   /**
    * All possible keys
    */
-  type Key = 'KeyA' | 'KeyD' | 'KeyW' | 'KeyS' 
+  type Key = 'KeyA' | 'KeyD' | 'KeyW' | 'KeyS' | 'KeyR' 
   
   /**
    * All possible states of the key
@@ -479,11 +502,14 @@ function main() {
         filter(({repeat})=>!repeat),
         map(result)),
     
-    //All possible movements
+    //All possible key events
     moveLeft = keyPressed('keydown', 'KeyA', () => new Move(-Constants.playerMoveDis, 0)),
     moveRight = keyPressed('keydown', 'KeyD', () => new Move(Constants.playerMoveDis, 0)),
     moveUp = keyPressed('keydown', 'KeyW', () => new Move(0, -Constants.playerMoveDis)),
-    moveDown = keyPressed('keydown', 'KeyS', () => new Move(0, Constants.playerMoveDis))
+    moveDown = keyPressed('keydown', 'KeyS', () => new Move(0, Constants.playerMoveDis)),
+    restart = keyPressed('keydown', 'KeyR', () => new FullReset())
+  
+  //Fully player logic ends here
 
   /**
    * For moving any bodies that isn't controlled by the player, only works horizontally
@@ -491,8 +517,8 @@ function main() {
    * 
    * @param curBody The current body being managed
    * @param speed The body's speed
-   * @param customClamp For a specific where you wouldn't want a body to warp the screen immdiately 
-   * @returns 
+   * @param customClamp For specific situations where you wouldn't want a body to warp the screen immdiately 
+   * @returns A moving body
    */
   const moveBody = (curBody: Body, speed: number = curBody.speed, customClamp: number = 0) => <Body>
   {
@@ -511,6 +537,16 @@ function main() {
         curBody.pos_x + speed
   }
 
+  /**
+   * A special type of 'moveBody' that gives a body the ability to 'flicker' while moving
+   * 
+   * @param timeFlick The interval of the flicker
+   * @param curState The current state being evaluated
+   * @param curBody The current body being evaluated
+   * @param speed The speeed of the body
+   * @param customClamp For specific situations where you wouldn't want a body to warp the screen immdiately 
+   * @returns A flickering moving body
+   */
   const flickingMoving = (timeFlick: number, curState: State, curBody: Body, speed: number = curBody.speed, customClamp: number = 0): Body =>
   {
     const movedBody = moveBody(curBody)
@@ -521,6 +557,8 @@ function main() {
   /**
    * Determines if the given positions are a valid position in the canvas,
    * if false then it is not and if true then it is
+   * 
+   * Suggested to be given for the player
    * 
    * @param curPosx The x position to be evaluated
    * @param curPosy The y position to be evaluated
@@ -541,6 +579,7 @@ function main() {
     moveRight,
     moveUp,
     moveDown,
+    restart,
   ).
     pipe(scan(currentState, initialState)).
     subscribe(updateView);
@@ -649,10 +688,48 @@ function main() {
     theState.turtles2.forEach((body) => updateBodyView(body, svg))
     updateBodyView(theState.frog, svg)
 
+    // React accordingly to the game over
+    const showGameOverText = () =>
+    {
+      gameRestartText.setAttribute("text-anchor", "middle")
+      gameRestartText.setAttribute("x", String(300))
+      gameRestartText.setAttribute("y", String(400))
+      gameRestartText.setAttribute("fill", "red")
+      gameRestartText.setAttribute("style", "font-size: 60")
+      gameRestartText.textContent = "Press R to Restart"
+      svg.appendChild(gameRestartText)
+      
+      gameOverText.setAttribute("text-anchor", "middle")
+      gameOverText.setAttribute("x", String(300))
+      gameOverText.setAttribute("y", String(300))
+      gameOverText.setAttribute("fill", "red")
+      gameOverText.setAttribute("style", "font-size: 100")
+      gameOverText.textContent = "Game over"
+      svg.appendChild(gameOverText)
+    }
+
+    const hideGameOverText = () =>
+    {
+      gameRestartText.setAttribute("style", "font-size: 0")
+      gameRestartText.textContent = ""
+      svg.appendChild(gameRestartText)
+      
+      gameOverText.setAttribute("style", "font-size: 0")
+      gameOverText.textContent = ""
+      svg.appendChild(gameOverText)
+    }
+    
+    theState.gameOver ?
+      showGameOverText()
+    :
+      hideGameOverText()
+
   }
 
-  //UI Elements here
+  // UI Elements here
   const rounds = document.getElementById("rounds")!;
+  const gameOverText = document.createElementNS(svg.namespaceURI, "text")!;
+  const gameRestartText = document.createElementNS(svg.namespaceURI, "text")!;
 
 }
 
@@ -663,15 +740,23 @@ if (typeof window !== "undefined") {
   }
 }
 
+//Utility function from the Astroid FRP code
+/**
+ * set a number of attributes on an Element at once
+ * @param e the Element
+ * @param o a property bag
+ */         
+  // attr = (e:Element,o:Object) =>
+  //   { for(const k in o) e.setAttribute(k,String(o[k])) }
+
 /** Latest progress
  *  + Creating life system, putting that attribute into the bodies
  *  + When done write it as a hud (line 515)
  *  + The beginnings of the life system is on the go (line 178)
  * 
  *  Trello but not really
- *  + Life system
- *  + Game Over system
- *  + Restart system
+ *  + Lives UI
+ *  + Score system
  * 
  *  Done:
  *  + Implement engine
@@ -690,6 +775,9 @@ if (typeof window !== "undefined") {
  *  + Make bodies able to hide when a certain round is reached
  *  + Make crocodiles
  *  + Make turtles
+ *  + Life system
+ *  + Game Over system
+ *  + Restart system
  * 
  *  Note:
  *  1. Crocodile: can stand on its body, but not the head
