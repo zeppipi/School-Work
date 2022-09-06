@@ -70,6 +70,7 @@ function main() {
     color?: string,
     showRound: number,
     disappearRound: number | null,
+    lives: number,
     collidingEvent: (_: Body) => Body
   }
 
@@ -91,6 +92,7 @@ function main() {
       sizeWidthMulti: 0,
       showRound: 0,
       disappearRound: null,
+      lives: 3,
       collidingEvent: Identity
     };
   }
@@ -117,7 +119,7 @@ function main() {
   * @returns A single body
   */
   const createEnemy = (xPosition: number, yPosition: number, showRound: number, disappearRound: number | null, movementSpeed: number, enemyID: String, shapeID: String) => 
-                      (color: String, size: number, sizeWidthMulti: number) => (collidingFunction: (_:Body) => Body) =>
+                      (color: String, size: number, sizeWidthMulti: number) => (collidingFunction: (_:Body) => Body, livesAmount: number = 0) =>
     <Body>{
       //Set the body object
       ID: enemyID + (xPosition + ""),
@@ -130,7 +132,8 @@ function main() {
       showRound: showRound,
       disappearRound: disappearRound,
       color: color,
-      collidingEvent: collidingFunction
+      collidingEvent: collidingFunction,
+      lives: livesAmount
     }
 
   /**
@@ -154,7 +157,7 @@ function main() {
      }
   
   /**
-   * A function to reset a body to their spawn position
+   * A function to reset a body to their spawn position, harmlessly
    * 
    * @param player This function is specifically for the player
    * @returns 
@@ -164,6 +167,17 @@ function main() {
    ...player,
    pos_x: Constants.playerSpawnPoint[0],
    pos_y: Constants.playerSpawnPoint[1]
+  }
+
+  /**
+   * A function to reset a body to their spawn position, harmfully
+   * 
+   * @param player 
+   * @returns 
+   */
+  const harmfulReset = (player: Body) => <Body>
+  {
+    ...player
   }
 
   /**
@@ -220,6 +234,29 @@ function main() {
        ...curBody,
        pos_y: curBody.pos_y * -1
     })
+  }
+  
+  /**
+   * A function that checks if the player is still alive
+   * True for they are and false if they aren't
+   * 
+   * @param player 
+   * @returns 
+   */
+  const playerCheck = (player: Body): boolean =>
+  {
+    return player.lives <= 0 ? false : true
+  }
+
+  /**
+   * A function that executes all the nessecary events for a game over
+   * 
+   * @param theState 
+   * @returns 
+   */
+  const gameOver = (theState: State) => <State>
+  {
+    ...theState
   }
 
   /**
@@ -316,8 +353,10 @@ function main() {
     
     console.log(curState.time)
     
+    //Check if the player is still alive
+    return playerCheck(curState.frog) ?
     // Check if round should continue or reset to a new one
-    return roundChecker(curState) ? 
+    roundChecker(curState) ? 
     newRound(curState)
     :
     {...curState,
@@ -339,7 +378,9 @@ function main() {
       turtles2: curState.turtles2.map(turtles => flickingMoving(150, curState, turtles)),
       frog: collisionsHandler(allBodies, curState.frog, curState),
       time: elapsed
-    };
+    }
+    :
+    gameOver(curState)
   }
 
   /**
@@ -623,8 +664,9 @@ if (typeof window !== "undefined") {
 }
 
 /** Latest progress
- *  + Turtles has been made
- *  + Some weird bug with the crocodile's head has been fixed... maybe
+ *  + Creating life system, putting that attribute into the bodies
+ *  + When done write it as a hud (line 515)
+ *  + The beginnings of the life system is on the go (line 178)
  * 
  *  Trello but not really
  *  + Life system
