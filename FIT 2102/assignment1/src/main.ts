@@ -146,8 +146,6 @@ function main() {
        const bodyShowRound = curBody.showRound;
        const bodyHideRound = curBody.disappearRound;
 
-       console.log(bodyHideRound)
-
        return bodyHideRound ? 
           currentRound >= bodyHideRound ? false : bodyShowRound <= currentRound
         :
@@ -169,18 +167,13 @@ function main() {
   }
 
   /**
-   * A function that 'destroys' 'otherBody' and resets the 'player'
+   * A function that 'destroys' 'otherBody'
    * 
    * @param theState This function is specifically for non-players
    * @returns 
    */
-  const Destroy = (player: State, otherBody: Body): Body =>
+  const Destroy = (otherBody: Body): Body =>
   {
-    <State> {
-      ...player,
-      frog: Reset(player.frog)
-    }
-
     return <Body> {
       ...otherBody,
       pos_y: otherBody.pos_y * -1
@@ -255,6 +248,8 @@ function main() {
     crocodiles1Head: ReadonlyArray<Body>,
     crocodiles2: ReadonlyArray<Body>,
     crocodiles2Head: ReadonlyArray<Body>,
+    turtles1: ReadonlyArray<Body>,
+    turtles2: ReadonlyArray<Body>,
     rounds: number,
     gameOver:boolean
   }>
@@ -271,17 +266,19 @@ function main() {
     vans: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 2.3, "white", "vans", "rect", 2)([100, 300, 500], [360, 360, 360], [0,2,0], [null, null, null], 2, Reset),
     trucks: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 4, "red", "trucks", "rect", -1.8)([0, 250, 500], [320, 320, 320], [0,2,0], [null, null, null], 2, Reset),
     logs1: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 4, "brown", "logs1", "rect", 2)([0, 250, 500], [240, 240, 240], [0,0,0], [3, 2, 4], 2, (body) => moveBody(body, 2)),
-    logs2: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 2, "brown", "logs2", "rect", -3)([0, 160, 320, 480], [200, 200, 200, 200], [0,0,0,0], [null, 2, 3, null], 3, (body) => moveBody(body, -3)),
+    logs2: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 2, "brown", "logs2", "rect", -3)([0, 160, 320, 480], [200, 200, 200, 200], [0,0,0,0], [4, 2, 3, 4], 3, (body) => moveBody(body, -3)),
     logs3: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 4, "brown", "logs3", "rect", 2)([0, 250, 500], [160, 160, 160], [0,0,0], [2, 4, 2], 2, (body) => moveBody(body, 2)),
-    logs4: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 2, "brown", "logs4", "rect", -1.8)([0, 160, 320, 480], [120, 120, 120, 120], [0,0,0,0], [3, null, null, 2], 3, (body) => moveBody(body, -1.8)),
+    logs4: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 2, "brown", "logs4", "rect", -1.8)([0, 160, 320, 480], [120, 120, 120, 120], [0,0,0,0], [3, 4, 4, 2], 3, (body) => moveBody(body, -1.8)),
     wins: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 2, "cyan", "win", "rect", 0)([70, 270, 470], [80, 80, 80], [0,0,0], [null, null, null], 2, Reset),
     riverWins: createEnemies(Constants.enemyHeights, 2, "blue", "riverWin", "rect", 0)([0, 146, 190, 346, 390, 546], [79.5, 79.5, 79.5, 79.5, 79.5, 79.5],[0,0,0,0,0,0], [null, null, null, null, null, null], 5, Reset),
     snake: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins - 30, 10, "lightgreen", "snake", "rect", 0.8)([0], [295], [3], [null], 0, Reset),
-    crocodiles1: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 3, "darkbrown", "crocodiles1", "rect", 2)([0, 500], [240, 240], [3, 4], [null, null], 1, (body) => moveBody(body, 2)),
-    crocodiles1Head: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 1, "darkred", "crocodiles1heads", "rect", 2)([112, 612], [240, 240], [3, 4], [null, null], 1, Reset),
-    crocodiles2: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 3, "darkbrown", "crocodiles1", "rect", 2)([250], [160], [4], [null], 0, (body) => moveBody(body, 2)),
-    crocodiles2Head: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 1, "darkred", "crocodiles1heads", "rect", 2)([362], [160], [4], [null], 0, Reset),
-    rounds: 1,
+    crocodiles1: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 4, "darkbrown", "crocodiles1", "rect", 2)([0, 500], [240, 240], [3, 4], [null, null], 1, (body) => moveBody(body, 2)),
+    crocodiles1Head: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 1, "darkred", "crocodiles1heads", "rect", 2)([120, 620], [240, 240], [3, 4], [null, null], 1, Reset),
+    crocodiles2: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 4, "darkbrown", "crocodiles1", "rect", 2)([250], [160], [4], [null], 0, (body) => moveBody(body, 2)),
+    crocodiles2Head: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 1, "darkred", "crocodiles1heads", "rect", 2)([370], [160], [4], [null], 0, Reset),
+    turtles1: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 2, "lightgreen", "turtles1", "rect", -3)([0, 160, 320, 480], [200, 200, 200, 200], [4, 2, 3, 4], [null, null, null, null], 3, (body) => moveBody(body, -3)),
+    turtles2: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 2, "lightgreen", "turtles2", "rect", -1.8)([0, 160, 320, 480], [120, 120, 120, 120], [3, 4, 4, 2], [null, null, null, null], 3, (body) => moveBody(body, -1.8)),
+    rounds: 4,
     gameOver: false
   }
 
@@ -315,7 +312,9 @@ function main() {
     const allBodies = curState.cars.concat(curState.karts).concat(curState.vans).concat(curState.trucks).concat(curState.logs1).
                       concat(curState.logs2).concat(curState.logs3).concat(curState.logs4).concat(curState.wins).concat(curState.snake).
                       concat(curState.wins).concat(curState.riverWins).concat(curState.crocodiles1).concat(curState.crocodiles1Head).
-                      concat(curState.crocodiles2).concat(curState.crocodiles2Head);
+                      concat(curState.crocodiles2).concat(curState.crocodiles2Head).concat(curState.turtles1).concat(curState.turtles2);
+    
+    console.log(curState.time)
     
     // Check if round should continue or reset to a new one
     return roundChecker(curState) ? 
@@ -330,12 +329,14 @@ function main() {
       logs2: curState.logs2.map(log => moveBody(log)),
       logs3: curState.logs3.map(log => moveBody(log)),
       logs4: curState.logs4.map(log => moveBody(log)),
-      wins: curState.wins.map(win => isColliding(win, curState.frog, curState) ? Destroy(curState, win) : win),
+      wins: curState.wins.map(win => isColliding(win, curState.frog, curState) ? Destroy(win) : win),
       snake: curState.snake.map(snake => moveBody(snake)),
       crocodiles1: curState.crocodiles1.map(crocodiles => moveBody(crocodiles)),
-      crocodiles1Head: curState.crocodiles1Head.map(crocodiles => moveBody(crocodiles, crocodiles.speed, 78)),
+      crocodiles1Head: curState.crocodiles1Head.map(crocodiles => moveBody(crocodiles, crocodiles.speed, 114)),
       crocodiles2: curState.crocodiles2.map(crocodiles => moveBody(crocodiles)),
-      crocodiles2Head: curState.crocodiles2Head.map(crocodiles => moveBody(crocodiles, crocodiles.speed, 78)),
+      crocodiles2Head: curState.crocodiles2Head.map(crocodiles => moveBody(crocodiles, crocodiles.speed, 114)),
+      turtles1: curState.turtles1.map(turtles => flickingMoving(100, curState, turtles)),
+      turtles2: curState.turtles2.map(turtles => flickingMoving(150, curState, turtles)),
       frog: collisionsHandler(allBodies, curState.frog, curState),
       time: elapsed
     };
@@ -458,15 +459,22 @@ function main() {
     // This 'if statement' is to give the objects the ability to warp when out of bounds
     pos_x: speed >= 0 ? // For objects moving left to right
       curBody.pos_x + speed > Constants.CanvasSize + customClamp  ? 
-      0 - ((curBody.size * curBody.sizeWidthMulti) - Constants.enemySizeMargins)
+      0 - (curBody.size * curBody.sizeWidthMulti)
       : 
       curBody.pos_x + speed
     :
       // For objects moving right to left
-      curBody.pos_x + speed < 0 - ((curBody.size * curBody.sizeWidthMulti) - Constants.enemySizeMargins) ?
+      curBody.pos_x + speed < 0 - (curBody.size * curBody.sizeWidthMulti) ?
         Constants.CanvasSize + customClamp
         :
         curBody.pos_x + speed
+  }
+
+  const flickingMoving = (timeFlick: number, curState: State, curBody: Body, speed: number = curBody.speed, customClamp: number = 0): Body =>
+  {
+    const movedBody = moveBody(curBody)
+
+    return curState.time % timeFlick == 0 ? Destroy(movedBody) : movedBody
   }
 
   /**
@@ -552,14 +560,17 @@ function main() {
         {
           updateBody.setAttribute("x", String(body.pos_x))
           updateBody.setAttribute("y", String(body.pos_y))
-          updateBody.setAttribute("width", String((body.size * body.sizeWidthMulti) - Constants.enemySizeMargins)), 
+          updateBody.setAttribute("width", String(body.size * body.sizeWidthMulti)), 
           updateBody.setAttribute("height", String(body.size))
         }
 
         //Body shouldn't be rendered
         const notRendered = () =>
         {
-          canvas.removeChild(updateBody)
+          updateBody.setAttribute("x", String(body.pos_x))
+          updateBody.setAttribute("y", String(body.pos_y))
+          updateBody.setAttribute("width", String(0)), 
+          updateBody.setAttribute("height", String(0))
         }
         
         const updateBody = document.getElementById(body.ID) || createBodyView()
@@ -593,6 +604,8 @@ function main() {
     theState.crocodiles1Head.forEach((body) => updateBodyView(body, svg))
     theState.crocodiles2.forEach((body) => updateBodyView(body, svg))
     theState.crocodiles2Head.forEach((body) => updateBodyView(body, svg))
+    theState.turtles1.forEach((body) => updateBodyView(body, svg))
+    theState.turtles2.forEach((body) => updateBodyView(body, svg))
     updateBodyView(theState.frog, svg)
 
   }
@@ -610,10 +623,10 @@ if (typeof window !== "undefined") {
 }
 
 /** Latest progress
- *  + Crocodiles has been made
+ *  + Turtles has been made
+ *  + Some weird bug with the crocodile's head has been fixed... maybe
  * 
  *  Trello but not really
- *  + Make turtles
  *  + Life system
  *  + Game Over system
  *  + Restart system
@@ -634,6 +647,7 @@ if (typeof window !== "undefined") {
  *  + Code the wins/goals
  *  + Make bodies able to hide when a certain round is reached
  *  + Make crocodiles
+ *  + Make turtles
  * 
  *  Note:
  *  1. Crocodile: can stand on its body, but not the head
