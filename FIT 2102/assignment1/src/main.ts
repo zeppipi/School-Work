@@ -40,7 +40,8 @@ function main() {
     enemyHeights: 40,               // Store the height of every non-player objects
     enemySizeMargins: 2,            // Store the margins of every non-player objects
     riverStart: 280,                // Store the y-location of where the river section starts
-    riverEnd: 120                   // Store the y-location of where the river section ends
+    riverEnd: 120,                   // Store the y-location of where the river section ends
+    pointsReward: 200               // Store the amount of points rewarded for each goal reached
     // carSize: [38, 78],           // Store car size [0] for height and [1] for width
     // kartsSize: [38, 48],         // Same for karts
     // vansSize: [38, 93],          // Same for vans
@@ -223,6 +224,20 @@ function main() {
   }
 
   /**
+   * A function that checks if a single body has touched one of the elements in a list of bodies
+   * 
+   * @param bodyList The list of bodies
+   * @param bodySingle The one body
+   * @param theState Needed for the 'isColliding' function
+   * @param counter A counter
+   * @returns True for 'yes it has' false for 'no it hasnt'
+   */
+  const touchedOne = (bodyList: ReadonlyArray<Body>, bodySingle: Body, theState: State, counter:number = bodyList.length): boolean =>
+  {
+    return counter <= 0 ? false : isColliding(bodyList[counter - 1], bodySingle, theState) ? true : touchedOne(bodyList, bodySingle, theState, counter - 1)
+  }
+
+  /**
    * A function that resets the scene and adds the round by one
    * 
    * @param theState The state to send to the next round
@@ -267,6 +282,7 @@ function main() {
         pos_x: Constants.playerSpawnPoint[0],
         pos_y: Constants.playerSpawnPoint[1]
       },
+    highscore: theState.score > theState.highscore ? theState.score : theState.highscore,
     gameOver: true
   }
 
@@ -280,6 +296,8 @@ function main() {
    */
   type State = Readonly<{
     time:number,
+    score: number,
+    highscore: number,
     frog:Body,
     cars:ReadonlyArray<Body>,
     karts: ReadonlyArray<Body>,
@@ -308,6 +326,8 @@ function main() {
   const initialState: State = 
   {
     time: 0,
+    score: 0,
+    highscore: 0,
     frog: createPlayer(),
     cars: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 2, "orange", "car", "rect", 2.5)([200, 400, 600], [440, 440, 440], [0,2,0], [null, null, null], 2, harmfulReset),
     karts: createEnemies(Constants.enemyHeights - Constants.enemySizeMargins, 1.3, "lightgreen", "karts", "rect", -4)([100, 250, 450, 600], [400, 400, 400, 400], [0,3,3,2], [null, null, null, null], 3, harmfulReset),
@@ -346,6 +366,7 @@ function main() {
           lives: 3
         },
       rounds: 1,
+      score: 0,
       gameOver: false
     }
     :
@@ -401,6 +422,7 @@ function main() {
       turtles1: curState.turtles1.map(turtles => flickingMoving(100, curState, turtles)),
       turtles2: curState.turtles2.map(turtles => flickingMoving(150, curState, turtles)),
       frog: collisionsHandler(allBodies, curState.frog, curState),
+      score: touchedOne(curState.wins, curState.frog, curState) ? curState.score + Constants.pointsReward : curState.score,
       time: elapsed
     }
     :
@@ -434,7 +456,7 @@ function main() {
         collided ?
           filteredCollidedBodies[0] ? filteredCollidedBodies[0].collidingEvent(singleBodyAux) : singleBodyAux  //In river and colliding a body
           :
-          Reset(singleBodyAux)  //In river but not colliding a body
+          harmfulReset(singleBodyAux)  //In river but not colliding a body
         : 
         collided ? 
           filteredCollidedBodies[0] ? filteredCollidedBodies[0].collidingEvent(singleBodyAux) : singleBodyAux  //Not in river and colliding with a body
@@ -593,6 +615,9 @@ function main() {
   {
     //Update UI elements
     rounds.textContent = String("Rounds: " + theState.rounds);
+    livesText.textContent = String("Lives: " + theState.frog.lives);
+    scoreText.textContent = String("Score: " + theState.score);
+    highscoreText.textContent = String("High Score: " + theState.highscore);
     
     const
       //Update all bodies on screen
@@ -728,6 +753,9 @@ function main() {
 
   // UI Elements here
   const rounds = document.getElementById("rounds")!;
+  const livesText = document.getElementById("lives")!;
+  const scoreText = document.getElementById("score")!;
+  const highscoreText = document.getElementById("highscore")!;
   const gameOverText = document.createElementNS(svg.namespaceURI, "text")!;
   const gameRestartText = document.createElementNS(svg.namespaceURI, "text")!;
 
@@ -740,23 +768,14 @@ if (typeof window !== "undefined") {
   }
 }
 
-//Utility function from the Astroid FRP code
-/**
- * set a number of attributes on an Element at once
- * @param e the Element
- * @param o a property bag
- */         
-  // attr = (e:Element,o:Object) =>
-  //   { for(const k in o) e.setAttribute(k,String(o[k])) }
-
 /** Latest progress
- *  + Creating life system, putting that attribute into the bodies
- *  + When done write it as a hud (line 515)
- *  + The beginnings of the life system is on the go (line 178)
+ *  + ITS OVER LETS GOOO!!!!!!!!!!!
+ *  + Doing the report tomorrow, godspeed I remember what I've done here
  * 
  *  Trello but not really
- *  + Lives UI
- *  + Score system
+ *  + Write report
+ *  + Delete all of these comments
+ *  + Submit
  * 
  *  Done:
  *  + Implement engine
@@ -778,6 +797,8 @@ if (typeof window !== "undefined") {
  *  + Life system
  *  + Game Over system
  *  + Restart system
+ *  + Score system
+ *  + High Score system
  * 
  *  Note:
  *  1. Crocodile: can stand on its body, but not the head
