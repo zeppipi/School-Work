@@ -353,22 +353,28 @@ function main() {
   /**
    * What happens on each state in relation to the events
    */
-  const currentState = (curState: State, curEvent: Move | Tick | FullReset) =>
+  const currentState = (curState: State, curEvent: Move | Tick | FullReset): State =>  
     // For when we are in a game over
     curEvent instanceof FullReset ?
-    {
-      ...curState,
-      frog:
-        {
-          ...curState.frog,
-          pos_x: Constants.playerSpawnPoint[0],
-          pos_y: Constants.playerSpawnPoint[1],
-          lives: 3
-        },
-      rounds: 1,
-      score: 0,
-      gameOver: false
-    }
+      curState.gameOver ?
+      {
+        ...curState,
+        frog:
+          {
+            ...curState.frog,
+            pos_x: Constants.playerSpawnPoint[0],
+            pos_y: Constants.playerSpawnPoint[1],
+            lives: 3
+          },
+        wins: curState.wins.map((win) => win.pos_y < 0 ? Destroy(win) : win),
+        rounds: 1,
+        score: 0,
+        gameOver: false
+      }
+      :
+      {
+        ...curState
+      }
     :
     // For when move happens
     curEvent instanceof Move ?
@@ -386,7 +392,7 @@ function main() {
       }
     : 
     tick(curState, curEvent.elapsed)
-  
+
   /**
    * What happens on each state in relation to the whole game
    */
@@ -769,11 +775,10 @@ if (typeof window !== "undefined") {
 }
 
 /** Latest progress
- *  + ITS OVER LETS GOOO!!!!!!!!!!!
- *  + Doing the report tomorrow, godspeed I remember what I've done here
+ *  + Report looks good! Just consult with the teacher to make sure tho
  * 
  *  Trello but not really
- *  + Write report
+ *  + Proofread report
  *  + Delete all of these comments
  *  + Submit
  * 
@@ -799,6 +804,8 @@ if (typeof window !== "undefined") {
  *  + Restart system
  *  + Score system
  *  + High Score system
+ *  + Fix restart bug, player is able to restart at any time
+ *  + Write report
  * 
  *  Note:
  *  1. Crocodile: can stand on its body, but not the head
