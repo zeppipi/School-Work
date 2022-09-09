@@ -40,7 +40,7 @@ function main() {
     enemyHeights: 40,               // Store the height of every non-player objects
     enemySizeMargins: 2,            // Store the margins of every non-player objects
     riverStart: 280,                // Store the y-location of where the river section starts
-    riverEnd: 120,                   // Store the y-location of where the river section ends
+    riverEnd: 120,                  // Store the y-location of where the river section ends
     pointsReward: 200               // Store the amount of points rewarded for each goal reached
     // carSize: [38, 78],           // Store car size [0] for height and [1] for width
     // kartsSize: [38, 48],         // Same for karts
@@ -187,7 +187,7 @@ function main() {
   /**
    * A function that 'destroys' 'otherBody'
    * 
-   * @param theState This function is specifically for non-players
+   * @param otherBody This function is specifically for non-players
    * @returns 
    */
   const Destroy = (otherBody: Body): Body =>
@@ -406,7 +406,7 @@ function main() {
     
     //Check if the player is still alive
     return playerCheck(curState.frog) ?
-    // Check if round should continue or reset to a new one
+    // Check if round should continue or reset to the next one
     roundChecker(curState) ? 
     newRound(curState)
     :
@@ -487,8 +487,8 @@ function main() {
   /**
    * Checks if the collider is colliding with the collidee
    * 
-   * @param collider The instigator (enemy here)
-   * @param collidee The victim (player here)
+   * @param collider The instigator (recommended: enemy here)
+   * @param collidee The victim (recommended: player here)
    * @returns True for they did and false for nah
    */
   const isColliding = (collider: Body, collidee: Body, theState: State): boolean =>
@@ -537,7 +537,7 @@ function main() {
     moveDown = keyPressed('keydown', 'KeyS', () => new Move(0, Constants.playerMoveDis)),
     restart = keyPressed('keydown', 'KeyR', () => new FullReset())
   
-  //Fully player logic ends here
+  //Fully player related logic ends here
 
   /**
    * For moving any bodies that isn't controlled by the player, only works horizontally
@@ -632,7 +632,7 @@ function main() {
         //Recreate the html object in case it doesn't spawn for this frame
         const createBodyView = () =>
         {
-          //Shape is hardcoded... perish
+          //Store the shape
           const updateBody = document.createElementNS(canvas.namespaceURI, body.shapeID);
 
           //Set its id
@@ -699,7 +699,6 @@ function main() {
       }
     
     // Update all bodies 
-    // Check 'existRounds' here
     theState.cars.forEach((body) => updateBodyView(body, svg))
     theState.karts.forEach((body) => updateBodyView(body, svg))
     theState.vans.forEach((body) => updateBodyView(body, svg))
@@ -773,71 +772,3 @@ if (typeof window !== "undefined") {
     main();
   }
 }
-
-/** Latest progress
- *  + Report looks good! Just consult with the teacher to make sure tho
- * 
- *  Trello but not really
- *  + Proofread report
- *  + Delete all of these comments
- *  + Submit
- * 
- *  Done:
- *  + Implement engine
- *  + Player Movement
- *  + Enemy object moves
- *  + Make the enemy works like a train
- *  + Clamp player
- *  + Warp NPCs
- *  + Make the car lanes
- *  + Collision system
- *  + Make the log lanes
- *  + Make river
- *  + Give independent bodies the ability to hide and unhide on command  
- *  + Round system
- *  + Code the wins/goals
- *  + Make bodies able to hide when a certain round is reached
- *  + Make crocodiles
- *  + Make turtles
- *  + Life system
- *  + Game Over system
- *  + Restart system
- *  + Score system
- *  + High Score system
- *  + Fix restart bug, player is able to restart at any time
- *  + Write report
- * 
- *  Note:
- *  1. Crocodile: can stand on its body, but not the head
- *  2. Player should fill in all goals before adding diffculty
- *  3. Snake: should show up in later diffs, goes across the safe area
- *  4. There is actually no randomness! All rows has a set pattern
- *  5. Nothing moves in a grid, this even includes the frog
- * 
- *  Report:
- *  In order to move a circle, you first make the universe, this is done by making 
- *  the frame updating cycle, this is done between the 'mainGameStream' and 'updateView'. 'mainGameStream' 
- *  merges all possible events that can be done in the game into the 'currentState' to create the next state
- *  ('initialState'), then passes it to the 'updateView' to render what that next state should look like. This
- *  is done so that everything in the game can be updated only once per frame.
- * 
- *  Frame refers to the interaction between 'gameClock' and 'tick', where 'gameClock' makes a stream of 'tick'
- *  with a given interval (which right now is set to 20ms to represent how long a frame shows up in ≈60 FPS).
- * 
- *  After creating the universe, next is to move some circles and rectangles. One thing to note is, I decided to 
- *  make everything but the player a rectangle, so that the systems between player and non-player are easily seperatable.
- * 
- *  The player's movement are managed by the 'mainGameStream' where the act of the player pressing a direction is considered
- *  as an event, where the enemies' movements are managed by the 'updateView'. In the 'updateView' method it can be seen that 
- *  rendering the player object requires a lot less steps than non-player objects, this is because a lot of the player's attributes 
- *  are already written in the html file, giving the player some permemnance to their attributes, the other objects are not given 
- *  the same treatment because of ID issues, there will be several copies of the same non-player object in the game, and if all of 
- *  them have the same ID in the html, then all distinct copies will have the same attributes, so instead, their attributes are made 
- *  in the 'initialState'.
- * 
- *  The collision system runs in the 'tick' function where in every tick, the player will check if they are colliding
- *  with all of the non-player bodies (the list of all non-player bodies are made by simply concatonating all of the
- *  distinct list of bodies). And when the player is colliding with one of them, it will call the function that is
- *  being held by that body, and throw itself into it. The reason why I make these bodies hold a function, is to make things more
- *  modular, the player hitting a log will do different things to when it hits a car.
- */
